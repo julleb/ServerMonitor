@@ -1,0 +1,13 @@
+
+<!ELEMENT information(CPU, Memory)>
+<!ELEMENT CPU(temp*)>
+<!ELEMENT Memory(total*, usage*)>
+<!ELEMENT temp (#PCDATA)>
+<!ATTLIST temp unit CDATA #IMPLIED>
+
+<!ELEMENT total (#PCDATA)>
+<!ELEMENT usage (#PCDATA)>
+
+
+
+<!ENTITY degree "#248"> 

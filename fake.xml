@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE information SYSTEM "information.dtd">
+<?xml-stylesheet type="text/xsl" href="xslt-fake.xsl"?>
+
+<information>
+    <CPU>
+        <temp unit="C&degree;">85</temp>
+        <temp unit="C">13</temp>
+    </CPU>
+    <Memory>
+        <total> 4096 </total>
+        <usage> 1024 </usage>
+    </Memory>
+
+    
+       
+</information>
