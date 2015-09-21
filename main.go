@@ -3,10 +3,17 @@ package main
 import (
     "fmt"
     "net/http"
-    "io"
+    "html/template"
 )
 
 
+type temp struct {
+    X int
+    Y int
+}
+
+//compile all templates and cache them
+var templates = template.Must(template.ParseGlob("views/*"))
 
 func main() {
     http.HandleFunc("/", hello)
@@ -16,8 +23,8 @@ func main() {
 }
 
 func hello(res http.ResponseWriter, req *http.Request) {
-    io.WriteString(res, "Hello my friend")
-    
+    s := temp{1,2}
+    templates.ExecuteTemplate(res, "index", s)
     
 }
 
