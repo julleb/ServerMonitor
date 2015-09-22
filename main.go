@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+    "os/exec"
+    "os"
+    "io"
 )
 
 type temp struct {
@@ -47,12 +50,25 @@ func formHandler(res http.ResponseWriter, req *http.Request) {
     //do some cool stuffs
     //check if ip is in db
     //some db logic stuffs
-    s := temp{ip, ip}
-    templates.ExecuteTemplate(res, "index", s) //render a page
+    //s := temp{ip, ip}
+    htmlCode := processXSLT("xslt-fake.xsl", "fake.xml")
+    io.WriteString(res, string(htmlCode))
+    
+//templates.ExecuteTemplate(res, "index", s) //render a page
     
     
 }
 
+func processXSLT(xslFile string, xmlFile string) ([]byte) {
+    cmd := exec.Cmd{
+        Args: []string{"xsltproc", xslFile, xmlFile},
+        Env: os.Environ(),
+        Path: "/usr/bin/xsltproc",
+    }
+    output,_ := cmd.Output()
+    fmt.Printf("yooo %s\n",output)
+    return output
+}
 
 
 
