@@ -25,6 +25,14 @@ func main() {
     t := db.Tuple{"ip", "291.293.22.2"}
     rows.Tuples = append(rows.Tuples, t)
     db.InsertIntoTable("server", rows)
+
+    r := db.SelectAllFromTable("server")
+    var col string
+    for r.Next() { 
+        r.Scan(&col)
+        fmt.Println(col)
+    }
+    
 	http.HandleFunc("/public/", visualHandler)
 	http.HandleFunc("/", index)
     
