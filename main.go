@@ -22,6 +22,7 @@ func main() {
     
     db.OpenDBConnection()
     
+
 	http.HandleFunc("/public/", visualHandler)
 	http.HandleFunc("/", index)
     
@@ -36,9 +37,6 @@ func main() {
 func index(res http.ResponseWriter, req *http.Request) {
 	fmt.Println("im in hello")
 	s := temp{"JULLE", "DDANI"}
-
-
-
 	templates.ExecuteTemplate(res, "index", s)
 
 }
@@ -51,11 +49,17 @@ func visualHandler(res http.ResponseWriter, req *http.Request) {
 
 //function for handling the html form
 func formHandler(res http.ResponseWriter, req *http.Request) {
-	fmt.Println("some1 asked for formhandler ")
 	ip := req.PostFormValue("ip")
 	fmt.Println(ip)
 	//do some cool stuffs
 	//check if ip is in db
+    if ipExists(ip) {
+        fmt.Println("IP DOES EXIST")
+        //ip exists in the db
+    }else {
+        fmt.Println("IP DOESNT EXIST")
+        insertIP(ip)
+    }
 	//some db logic stuffs
 	//s := temp{ip, ip}
 	htmlCode := processXSLT("xslt-fake.xsl", "fake.xml")
@@ -76,14 +80,34 @@ func processXSLT(xslFile string, xmlFile string) []byte {
 	return output
 }
 
-func insertIPintoDB(string ip) {
+func insertIP(ip string) {
     var values []interface{}
     values = append(values, ip)
-    _ = db.Query("INSERT INTO server(ip) values($1)", values ) 
+    row := db.Query("INSERT INTO server(ip) values($1)", values )
+    //db.DeferRows(row)    
+    fmt.Println(row.Columns())
+    
+    for row.Next() {
+        var col string
+        row.Scan(&col)
+        fmt.Println("Weee " + col)
+    }
+    db.DeferRows(row)
 }
 
-func ipExists(string ip) {
-    
+
+func insertInformation(values []interface{}) {
+   _ = db.Query("INSERT INTO information(id,cpu_temp,memory_usage,memory_total,total_memory) VALUES($1, $2,$3,$4,$5)", values)     
+}
+
+func ipExists(ip string) (bool) {
+    var values []interface{}
+    values = append(values, ip)
+    rows := db.Query("SELECT * FROM SERVER WHERE IP=$1", values)
+    for rows.Next() {
+        return true
+    }
+    return false
 }
 
 
