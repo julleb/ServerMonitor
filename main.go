@@ -21,17 +21,6 @@ var templates = template.Must(template.ParseGlob("views/*"))
 func main() {
     
     db.OpenDBConnection()
-    var rows db.Rows
-    t := db.Tuple{"ip", "291.293.22.2"}
-    rows.Tuples = append(rows.Tuples, t)
-    db.InsertIntoTable("server", rows)
-
-    r := db.SelectAllFromTable("server")
-    var col string
-    for r.Next() { 
-        r.Scan(&col)
-        fmt.Println(col)
-    }
     
 	http.HandleFunc("/public/", visualHandler)
 	http.HandleFunc("/", index)
@@ -87,27 +76,15 @@ func processXSLT(xslFile string, xmlFile string) []byte {
 	return output
 }
 
-/*
-func dbConnection() {
-	db, err := sql.Open("postgres", "user=postgres password=lol dbname=servermonitor")
-	if err != nil {
-		fmt.Println("No connectioN!")
-	}
-	fmt.Println("we have connection")
-	//...where ip=$1", ip)
-	rows, err := db.Query("SELECT * from information")
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer rows.Close() // defer it, very important, to avoid runtime panic
+func insertIPintoDB(string ip) {
+    var values []interface{}
+    values = append(values, ip)
+    _ = db.Query("INSERT INTO server(ip) values($1)", values ) 
+}
 
-	for rows.Next() { // looping through all rows
-		var id, cpu, us, to, too int
-		rows.Scan(&id, &cpu, &us, &to, &too) // getting  all the cols value
-		fmt.Println(id)
-		//fmt.Println(rows.Columns())
-	}
-}*/
+func ipExists(string ip) {
+    
+}
 
 
 
