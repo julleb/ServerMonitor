@@ -1,14 +1,13 @@
 package main
 
 import (
-	"database/sql"
-	"fmt"
-	_ "github.com/lib/pq"
+	"fmt"   
 	"html/template"
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
+    db "github.com/julleb/DBFuncs"
 )
 
 type temp struct {
@@ -20,9 +19,15 @@ type temp struct {
 var templates = template.Must(template.ParseGlob("views/*"))
 
 func main() {
+    
+    db.OpenDBConnection()
+    var rows db.Rows
+    t := db.Tuple{"ip", "291.293.22.2"}
+    rows.Tuples = append(rows.Tuples, t)
+    db.InsertIntoTable("server", rows)
 	http.HandleFunc("/public/", visualHandler)
 	http.HandleFunc("/", index)
-
+    
 	http.HandleFunc("/newip", formHandler)
 
 	fmt.Println("This server is going up on port 8080")
@@ -35,11 +40,7 @@ func index(res http.ResponseWriter, req *http.Request) {
 	fmt.Println("im in hello")
 	s := temp{"JULLE", "DDANI"}
 
-	//we just test the db here
-	dbConnection()
-    
-    //we test insertion
-    insertInformation()
+
 
 	templates.ExecuteTemplate(res, "index", s)
 
@@ -78,6 +79,7 @@ func processXSLT(xslFile string, xmlFile string) []byte {
 	return output
 }
 
+/*
 func dbConnection() {
 	db, err := sql.Open("postgres", "user=postgres password=lol dbname=servermonitor")
 	if err != nil {
@@ -97,24 +99,7 @@ func dbConnection() {
 		fmt.Println(id)
 		//fmt.Println(rows.Columns())
 	}
-}
+}*/
 
-//insert function to db
-//TODO we have to make variable db global, so we dont make a connection do db all the time
-func insertInformation() {
-	db, err := sql.Open("postgres", "user=postgres password=lol dbname=servermonitor")
-    ip := "50"
-	stmt, err := db.Prepare("insert into server(ip) values($1)")
-	if err != nil {
-		
-	}
-    //defer it, very important, to avoid runtime panic
-	defer stmt.Close()
-	rows, err := stmt.Query(ip)
-	if err != nil {
-		
-	}
-    //defer it, very important, to avoid runtime panic
-	defer rows.Close()
-	
-}
+
+
