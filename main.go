@@ -109,57 +109,63 @@ func processXSLT(xslFile string, xmlFile string) []byte {
 		Path: "/usr/bin/xsltproc",
 	}
 	output, _ := cmd.Output()
-	fmt.Printf("yooo %s\n", output)
+	//fmt.Printf("yooo %s\n", output)
 	return output
 }
 
-func requestDataHandler(res http.ResponseWriter, req *http.Request) {
-
-	//getting the ip from the url
-	urlArray := strings.Split(req.URL.Path, "/")
-	ip := urlArray[len(urlArray)-1]
-
-	conn, err := upgrader.Upgrade(res, req, nil)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	//while loop
-	for {
-		messageType, message, err := conn.ReadMessage()
-		if err != nil {
-			//the user disconnected
-			fmt.Println(err)
-			return
-		}
-
-		//the message from the server
-		messageFromInfoServer := getDataFromInfoServer(ip)
-
-		fmt.Println("i got this ", messageFromInfoServer)
-
-		//send the message to the firefox client
-		message = createMessage("i can be your hero baby")
-		err = conn.WriteMessage(messageType, message)
-		if err != nil {
-			return
-		}
-	}
+func requestDataHandler(res http.ResponseWriter, req *http.Request) {    
+    
+    //getting the ip from the url    
+    urlArray := strings.Split(req.URL.Path, "/")
+    ip := urlArray[len(urlArray)-1]
+      
+    conn, err := upgrader.Upgrade(res, req, nil)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+    //while loop
+    for {
+        messageType, message, err := conn.ReadMessage()
+        if err != nil {
+            //the user disconnected
+            fmt.Println(err)
+            return
+        }
+        
+        //the message from the server
+        messageFromInfoServer, error := getDataFromInfoServer(ip)
+        if(error != nil) {
+            //couldnt connect to the ip
+            return
+        }
+        
+        //we got a connect to the InfoServer
+        //TODO add the data to the server!
+        
+        //send the message to the firefox client
+        message = createMessage(messageFromInfoServer)
+        err = conn.WriteMessage(messageType, message);
+        if  err != nil {
+            fmt.Println(err)
+            return
+        }
+    }
 }
 
-func getDataFromInfoServer(ip string) string {
-	ipAndPort := ip + ":9090"
-	conn, err := net.Dial("tcp", ipAndPort)
-	if err != nil {
-		fmt.Println(err)
-		return ""
-	}
-	reply := make([]byte, 1024)
-	conn.Read(reply)
-	message := convertByteArrayToString(reply)
-	//_,_ = bufio.NewReader(conn).ReadString('\n');
-
-	return message
+func getDataFromInfoServer(ip string) (string, error) {
+    ipAndPort := ip + ":9090"
+    conn, err := net.Dial("tcp", ipAndPort)
+    if(err != nil) {
+        fmt.Println(err)
+        return "", err;  
+    }
+    reply := make([]byte, 1024)
+    conn.Read(reply)
+    message := convertByteArrayToString(reply)
+    //_,_ = bufio.NewReader(conn).ReadString('\n');
+    
+    return message,err
 }
 
 func createMessage(message string) []byte {
