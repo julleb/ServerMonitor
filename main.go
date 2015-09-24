@@ -75,13 +75,6 @@ func visualHandler(res http.ResponseWriter, req *http.Request) {
 func formHandler(res http.ResponseWriter, req *http.Request) {
 	ip := req.PostFormValue("ip")
 	fmt.Println(ip)
-	//do some cool stuffs
-	//check if ip is in db
-    if ipExists(ip) {
-        //ip exists in the db        
-        fmt.Println("IP DOES EXIST")
-        //need to query to get last week info        
-    }
     //redirect the user to the ip url
     http.Redirect(res, req, "/"+ip, 301)
 	//templates.ExecuteTemplate(res, "index", s) //render a page
