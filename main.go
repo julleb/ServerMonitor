@@ -86,6 +86,7 @@ func serverMonitorHandler(res http.ResponseWriter, req *http.Request) {
     urlArray := strings.Split(req.URL.Path, "/")
     ip := urlArray[len(urlArray)-1]
     
+    /*
     if ipExists(ip) {
        var values []interface{}
        values = append(values, ip)
@@ -95,6 +96,7 @@ func serverMonitorHandler(res http.ResponseWriter, req *http.Request) {
 
        }      
     }
+    */
     //here we can get the ip and query the db
     htmlCode := processXSLT("xslt-fake.xsl", "fake.xml")
     io.WriteString(res, string(htmlCode))
