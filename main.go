@@ -85,7 +85,7 @@ func serverMonitorHandler(res http.ResponseWriter, req *http.Request) {
     //getting the ip from the url    
     urlArray := strings.Split(req.URL.Path, "/")
     ip := urlArray[len(urlArray)-1]
-    
+    fmt.Println(ip)
     /*
     if ipExists(ip) {
        var values []interface{}
