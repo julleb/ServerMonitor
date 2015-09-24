@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
     "net"
-    "bufio"
     db "github.com/julleb/DBFuncs"
     "github.com/gorilla/websocket"
     "github.com/gorilla/mux"
@@ -150,7 +149,10 @@ func getDataFromInfoServer(ip string) (string) {
         fmt.Println(err)
         return "";  
     }
-    message,_ := bufio.NewReader(conn).ReadString('\n');
+    reply := make([]byte, 1024)
+    conn.Read(reply)
+    message := convertByteArrayToString(reply)
+    //_,_ = bufio.NewReader(conn).ReadString('\n');
     
     return message
 }
