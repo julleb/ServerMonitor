@@ -6,11 +6,26 @@
     <xsl:template match="information">
     <html>
         <head>
+            <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+            <script src="public/js/socket.js"></script>
             <title>ServerMonitor</title>
         </head>
 
         <body>
             <xsl:apply-templates select="CPU"/>
+   
+            <script> 
+                
+                var serverSocket = new WebSocket("ws://localhost:8080/requestdata");
+                window.setInterval(function() {
+                    console.log("heeej")   
+                    serverSocket.send("hej");
+                    serverSocket.onmessage = function(e) {
+                        console.log(e.data)
+                    };
+                },5000);       
+            </script>
+
         </body>
 
     </html>

@@ -8,7 +8,13 @@ import (
 	"os"
 	"os/exec"
     db "github.com/julleb/DBFuncs"
+    "github.com/gorilla/websocket"
 )
+
+var upgrader = websocket.Upgrader{
+    ReadBufferSize:  1024, //might need to increase this?
+    WriteBufferSize: 1024,
+}
 
 type temp struct {
 	X string
@@ -26,6 +32,7 @@ func main() {
 	http.HandleFunc("/public/", visualHandler)
 	http.HandleFunc("/", index)
     
+    http.HandleFunc("/requestdata", requestDataHandler)
 	http.HandleFunc("/newip", formHandler)
 
 	fmt.Println("This server is going up on port 8080")
@@ -47,6 +54,10 @@ func visualHandler(res http.ResponseWriter, req *http.Request) {
 
 }
 
+
+
+
+
 //function for handling the html form
 func formHandler(res http.ResponseWriter, req *http.Request) {
 	ip := req.PostFormValue("ip")
@@ -54,14 +65,10 @@ func formHandler(res http.ResponseWriter, req *http.Request) {
 	//do some cool stuffs
 	//check if ip is in db
     if ipExists(ip) {
+        //ip exists in the db        
         fmt.Println("IP DOES EXIST")
-        //ip exists in the db
-    }else {
-        fmt.Println("IP DOESNT EXIST")
-        insertIP(ip)
+        //need to query to get last week info        
     }
-	//some db logic stuffs
-	//s := temp{ip, ip}
 	htmlCode := processXSLT("xslt-fake.xsl", "fake.xml")
 	io.WriteString(res, string(htmlCode))
 
@@ -78,6 +85,40 @@ func processXSLT(xslFile string, xmlFile string) []byte {
 	output, _ := cmd.Output()
 	fmt.Printf("yooo %s\n", output)
 	return output
+}
+
+func requestDataHandler(w http.ResponseWriter, r *http.Request) {
+    conn, err := upgrader.Upgrade(w, r, nil)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+    //while loop
+    for {
+        messageType, message, err := conn.ReadMessage()
+        if err != nil {
+            //the user disconnected
+            fmt.Println(err)
+            return
+        }
+        read_message := convertByteArrayToString(message)
+        fmt.Println("got a message ", read_message)
+        message = createMessage("i can be your hero baby")
+        
+        err = conn.WriteMessage(messageType, message);
+        if  err != nil {
+            return
+        }
+    }
+}
+
+
+func createMessage(message string) ([]byte) {
+    return []byte(message)
+}
+
+func convertByteArrayToString(arr []byte) (string) {
+    return string(arr[:])
 }
 
 func insertIP(ip string) {
