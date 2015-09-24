@@ -89,8 +89,20 @@ func formHandler(res http.ResponseWriter, req *http.Request) {
 
 //handle the Server monitor page
 func serverMonitorHandler(res http.ResponseWriter, req *http.Request) {
+    //getting the ip from the url    
+    urlArray := strings.Split(req.URL.Path, "/")
+    ip := urlArray[len(urlArray)-1]
+    
+    if ipExists(ip) {
+       var values []interface{}
+       values = append(values, ip)
+       rows := db.Query("SELECT * FROM server NATURAL JOIN has NATURAL JOIN information WHERE server.ip=has.ip", values);
+       for rows.Next() {
+            
+
+       }      
+    }
     //here we can get the ip and query the db
-        
     htmlCode := processXSLT("xslt-fake.xsl", "fake.xml")
     io.WriteString(res, string(htmlCode))
 
@@ -126,14 +138,14 @@ func requestDataHandler(res http.ResponseWriter, req *http.Request) {
             fmt.Println(err)
             return
         }
-        /*
-        read_message := convertByteArrayToString(message)
-        fmt.Println("got a message ", read_message)
-        message = createMessage("i can be your hero baby")
-        */
-        fmt.Println("this is ip " + string(ip))
+        
+        //the message from the server
         messageFromInfoServer := getDataFromInfoServer(ip)
+
+        
         fmt.Println("i got this " ,messageFromInfoServer)
+
+        //send the message to the firefox client
         message = createMessage("i can be your hero baby")
         err = conn.WriteMessage(messageType, message);
         if  err != nil {
@@ -179,6 +191,8 @@ func insertIP(ip string) {
     }
     db.DeferRows(row)
 }
+
+
 
 
 func insertInformation(values []interface{}) {
