@@ -110,7 +110,7 @@ func processXSLT(xslFile string, xmlFile string) []byte {
 		Path: "/usr/bin/xsltproc",
 	}
 	output, _ := cmd.Output()
-	fmt.Printf("yooo %s\n", output)
+	//fmt.Printf("yooo %s\n", output)
 	return output
 }
 
@@ -135,33 +135,38 @@ func requestDataHandler(res http.ResponseWriter, req *http.Request) {
         }
         
         //the message from the server
-        messageFromInfoServer := getDataFromInfoServer(ip)
-
+        messageFromInfoServer, error := getDataFromInfoServer(ip)
+        if(error != nil) {
+            //couldnt connect to the ip
+            return
+        }
         
-        fmt.Println("i got this " ,messageFromInfoServer)
-
+        //we got a connect to the InfoServer
+        //TODO add the data to the server!
+        
         //send the message to the firefox client
-        message = createMessage("i can be your hero baby")
+        message = createMessage(messageFromInfoServer)
         err = conn.WriteMessage(messageType, message);
         if  err != nil {
+            fmt.Println(err)
             return
         }
     }
 }
 
-func getDataFromInfoServer(ip string) (string) {
+func getDataFromInfoServer(ip string) (string, error) {
     ipAndPort := ip + ":9090"
     conn, err := net.Dial("tcp", ipAndPort)
     if(err != nil) {
         fmt.Println(err)
-        return "";  
+        return "", err;  
     }
     reply := make([]byte, 1024)
     conn.Read(reply)
     message := convertByteArrayToString(reply)
     //_,_ = bufio.NewReader(conn).ReadString('\n');
     
-    return message
+    return message,err
 }
 
 func createMessage(message string) ([]byte) {
