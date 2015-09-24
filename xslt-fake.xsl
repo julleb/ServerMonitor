@@ -9,10 +9,10 @@
         <script src="public/js/socket.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
         <!-- Bootstrap -->
-        <link href="css/bootstrap.css" rel="stylesheet" media="screen"/>
+        <link href="public/css/bootstrap.css" rel="stylesheet" media="screen"/>
         <script type="text/javascript" src="http://code.jquery.com/jquery.js"></script>
-        <script type="text/javascript" src="js/bootstrap.min.js"></script>
-        <script type="text/javascript" src="js/canvasjs.min.js"></script>
+        <script type="text/javascript" src="public/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="public/js/canvasjs.min.js"></script>
         <title>ServerMonitor</title>
       </head>
       <body>

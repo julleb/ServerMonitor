@@ -1,22 +1,22 @@
 package main
 
 import (
-	"fmt"   
+	"fmt"
+	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
+	db "github.com/julleb/DBFuncs"
 	"html/template"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
-    "net"
-    db "github.com/julleb/DBFuncs"
-    "github.com/gorilla/websocket"
-    "github.com/gorilla/mux"
-    "strings"
+	"strings"
 )
 
 var upgrader = websocket.Upgrader{
-    ReadBufferSize:  1024, //might need to increase this?
-    WriteBufferSize: 1024,
+	ReadBufferSize:  1024, //might need to increase this?
+	WriteBufferSize: 1024,
 }
 
 type temp struct {
@@ -28,26 +28,28 @@ type temp struct {
 var templates = template.Must(template.ParseGlob("views/*"))
 
 func main() {
-    
-    db.OpenDBConnection()
-    
-    r := mux.NewRouter()
-    r.HandleFunc("/public/", visualHandler);
-	r.HandleFunc("/", index)
-    
-    r.HandleFunc("/requestdata/{ip}", requestDataHandler)
-    r.HandleFunc("/newip", formHandler)
-	r.HandleFunc("/{ip}", serverMonitorHandler)
-    http.Handle("/", r)    
-    
-    /*
-	http.HandleFunc("/public/", visualHandler)
-	http.HandleFunc("/", index)
-    
-    http.HandleFunc("/requestdata", requestDataHandler)
-	http.HandleFunc("/newip", formHandler)
-    */
 
+	db.OpenDBConnection()
+
+	r := mux.NewRouter()
+	//r.HandleFunc("/public/", visualHandler)
+	r.HandleFunc("/", index)
+
+	r.HandleFunc("/requestdata/{ip}", requestDataHandler)
+	r.HandleFunc("/newip", formHandler)
+	r.HandleFunc("/{ip}", serverMonitorHandler)
+
+	/*
+			http.HandleFunc("/public/", visualHandler)
+			http.HandleFunc("/", index)
+
+		    http.HandleFunc("/requestdata", requestDataHandler)
+			http.HandleFunc("/newip", formHandler)
+	*/
+
+	s := http.StripPrefix("/public/", http.FileServer(http.Dir("./public/")))
+	r.PathPrefix("/public/").Handler(s)
+	http.Handle("/", r)
 	fmt.Println("This server is going up on port 8080")
 	http.ListenAndServe(":8080", nil)
 
@@ -63,43 +65,40 @@ func index(res http.ResponseWriter, req *http.Request) {
 
 //function for css and js
 func visualHandler(res http.ResponseWriter, req *http.Request) {
+	fmt.Println("serving:", req.URL.Path[1:])
 	http.ServeFile(res, req, req.URL.Path[1:])
 
 }
-
-
-
-
 
 //function for handling the html form
 func formHandler(res http.ResponseWriter, req *http.Request) {
 	ip := req.PostFormValue("ip")
 	fmt.Println(ip)
-    //redirect the user to the ip url
-    http.Redirect(res, req, "/"+ip, 301)
+	//redirect the user to the ip url
+	http.Redirect(res, req, "/"+ip, 301)
 	//templates.ExecuteTemplate(res, "index", s) //render a page
 }
 
 //handle the Server monitor page
 func serverMonitorHandler(res http.ResponseWriter, req *http.Request) {
-    //getting the ip from the url    
-    urlArray := strings.Split(req.URL.Path, "/")
-    ip := urlArray[len(urlArray)-1]
-    fmt.Println(ip)
-    /*
-    if ipExists(ip) {
-       var values []interface{}
-       values = append(values, ip)
-       rows := db.Query("SELECT * FROM server NATURAL JOIN has NATURAL JOIN information WHERE server.ip=has.ip", values);
-       for rows.Next() {
-            
+	//getting the ip from the url
+	urlArray := strings.Split(req.URL.Path, "/")
+	ip := urlArray[len(urlArray)-1]
+	fmt.Println(ip)
+	/*
+	   if ipExists(ip) {
+	      var values []interface{}
+	      values = append(values, ip)
+	      rows := db.Query("SELECT * FROM server NATURAL JOIN has NATURAL JOIN information WHERE server.ip=has.ip", values);
+	      for rows.Next() {
 
-       }      
-    }
-    */
-    //here we can get the ip and query the db
-    htmlCode := processXSLT("xslt-fake.xsl", "fake.xml")
-    io.WriteString(res, string(htmlCode))
+
+	      }
+	   }
+	*/
+	//here we can get the ip and query the db
+	htmlCode := processXSLT("xslt-fake.xsl", "fake.xml")
+	io.WriteString(res, string(htmlCode))
 
 }
 
@@ -114,95 +113,88 @@ func processXSLT(xslFile string, xmlFile string) []byte {
 	return output
 }
 
-func requestDataHandler(res http.ResponseWriter, req *http.Request) {    
-    
-    //getting the ip from the url    
-    urlArray := strings.Split(req.URL.Path, "/")
-    ip := urlArray[len(urlArray)-1]
-      
-    conn, err := upgrader.Upgrade(res, req, nil)
-    if err != nil {
-        fmt.Println(err)
-        return
-    }
-    //while loop
-    for {
-        messageType, message, err := conn.ReadMessage()
-        if err != nil {
-            //the user disconnected
-            fmt.Println(err)
-            return
-        }
-        
-        //the message from the server
-        messageFromInfoServer := getDataFromInfoServer(ip)
+func requestDataHandler(res http.ResponseWriter, req *http.Request) {
 
-        
-        fmt.Println("i got this " ,messageFromInfoServer)
+	//getting the ip from the url
+	urlArray := strings.Split(req.URL.Path, "/")
+	ip := urlArray[len(urlArray)-1]
 
-        //send the message to the firefox client
-        message = createMessage("i can be your hero baby")
-        err = conn.WriteMessage(messageType, message);
-        if  err != nil {
-            return
-        }
-    }
+	conn, err := upgrader.Upgrade(res, req, nil)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	//while loop
+	for {
+		messageType, message, err := conn.ReadMessage()
+		if err != nil {
+			//the user disconnected
+			fmt.Println(err)
+			return
+		}
+
+		//the message from the server
+		messageFromInfoServer := getDataFromInfoServer(ip)
+
+		fmt.Println("i got this ", messageFromInfoServer)
+
+		//send the message to the firefox client
+		message = createMessage("i can be your hero baby")
+		err = conn.WriteMessage(messageType, message)
+		if err != nil {
+			return
+		}
+	}
 }
 
-func getDataFromInfoServer(ip string) (string) {
-    ipAndPort := ip + ":9090"
-    conn, err := net.Dial("tcp", ipAndPort)
-    if(err != nil) {
-        fmt.Println(err)
-        return "";  
-    }
-    reply := make([]byte, 1024)
-    conn.Read(reply)
-    message := convertByteArrayToString(reply)
-    //_,_ = bufio.NewReader(conn).ReadString('\n');
-    
-    return message
+func getDataFromInfoServer(ip string) string {
+	ipAndPort := ip + ":9090"
+	conn, err := net.Dial("tcp", ipAndPort)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	reply := make([]byte, 1024)
+	conn.Read(reply)
+	message := convertByteArrayToString(reply)
+	//_,_ = bufio.NewReader(conn).ReadString('\n');
+
+	return message
 }
 
-func createMessage(message string) ([]byte) {
-    return []byte(message)
+func createMessage(message string) []byte {
+	return []byte(message)
 }
 
-func convertByteArrayToString(arr []byte) (string) {
-    return string(arr[:])
+func convertByteArrayToString(arr []byte) string {
+	return string(arr[:])
 }
 
 func insertIP(ip string) {
-    var values []interface{}
-    values = append(values, ip)
-    row := db.Query("INSERT INTO server(ip) values($1)", values )
-    //db.DeferRows(row)    
-    fmt.Println(row.Columns())
-    
-    for row.Next() {
-        var col string
-        row.Scan(&col)
-        fmt.Println("Weee " + col)
-    }
-    db.DeferRows(row)
+	var values []interface{}
+	values = append(values, ip)
+	row := db.Query("INSERT INTO server(ip) values($1)", values)
+	//db.DeferRows(row)
+	fmt.Println(row.Columns())
+
+	for row.Next() {
+		var col string
+		row.Scan(&col)
+		fmt.Println("Weee " + col)
+	}
+	db.DeferRows(row)
 }
-
-
-
 
 func insertInformation(values []interface{}) {
-   _ = db.Query("INSERT INTO information(id,cpu_temp,memory_usage,memory_total,total_memory) VALUES($1, $2,$3,$4,$5)", values)     
+	_ = db.Query("INSERT INTO information(id,cpu_temp,memory_usage,memory_total,total_memory) VALUES($1, $2,$3,$4,$5)", values)
 }
 
-func ipExists(ip string) (bool) {
-    var values []interface{}
-    values = append(values, ip)
-    rows := db.Query("SELECT * FROM SERVER WHERE IP=$1", values)
-    for rows.Next() {
-        return true
-    }
-    return false
+func ipExists(ip string) bool {
+	var values []interface{}
+	values = append(values, ip)
+	rows := db.Query("SELECT * FROM SERVER WHERE IP=$1", values)
+	for rows.Next() {
+		return true
+	}
+	return false
 }
-
-
-
