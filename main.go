@@ -7,8 +7,11 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+    "net"
+    "bufio"
     db "github.com/julleb/DBFuncs"
     "github.com/gorilla/websocket"
+    "github.com/gorilla/mux"
 )
 
 var upgrader = websocket.Upgrader{
@@ -28,12 +31,22 @@ func main() {
     
     db.OpenDBConnection()
     
-
+    r := mux.NewRouter()
+    r.HandleFunc("/public/", visualHandler);
+	r.HandleFunc("/", index)
+    
+    r.HandleFunc("/requestdata", requestDataHandler)
+    r.HandleFunc("/newip", formHandler)
+	r.HandleFunc("/{ip}", serverMonitorHandler)
+    http.Handle("/", r)    
+    
+    /*
 	http.HandleFunc("/public/", visualHandler)
 	http.HandleFunc("/", index)
     
     http.HandleFunc("/requestdata", requestDataHandler)
 	http.HandleFunc("/newip", formHandler)
+    */
 
 	fmt.Println("This server is going up on port 8080")
 	http.ListenAndServe(":8080", nil)
@@ -69,10 +82,15 @@ func formHandler(res http.ResponseWriter, req *http.Request) {
         fmt.Println("IP DOES EXIST")
         //need to query to get last week info        
     }
-	htmlCode := processXSLT("xslt-fake.xsl", "fake.xml")
-	io.WriteString(res, string(htmlCode))
-
+    //redirect the user to the ip url
+    http.Redirect(res, req, "/"+ip, 301)
 	//templates.ExecuteTemplate(res, "index", s) //render a page
+}
+
+//handle the Server monitor page
+func serverMonitorHandler(res http.ResponseWriter, req *http.Request) {
+    htmlCode := processXSLT("xslt-fake.xsl", "fake.xml")
+    io.WriteString(res, string(htmlCode))
 
 }
 
@@ -87,8 +105,8 @@ func processXSLT(xslFile string, xmlFile string) []byte {
 	return output
 }
 
-func requestDataHandler(w http.ResponseWriter, r *http.Request) {
-    conn, err := upgrader.Upgrade(w, r, nil)
+func requestDataHandler(res http.ResponseWriter, req *http.Request) {    
+    conn, err := upgrader.Upgrade(res, req, nil)
     if err != nil {
         fmt.Println(err)
         return
@@ -101,10 +119,13 @@ func requestDataHandler(w http.ResponseWriter, r *http.Request) {
             fmt.Println(err)
             return
         }
+        /*
         read_message := convertByteArrayToString(message)
         fmt.Println("got a message ", read_message)
         message = createMessage("i can be your hero baby")
-        
+        */
+        //getDataFromInfoServer(ip)
+        message = createMessage("i can be your hero baby")
         err = conn.WriteMessage(messageType, message);
         if  err != nil {
             return
@@ -112,6 +133,13 @@ func requestDataHandler(w http.ResponseWriter, r *http.Request) {
     }
 }
 
+func getDataFromInfoServer(ip string) (string) {
+    ipAndPort := ip + ":9090"
+    conn, _ := net.Dial("tcp", ipAndPort)
+    message,_ := bufio.NewReader(conn).ReadString('\n');
+    
+    return message
+}
 
 func createMessage(message string) ([]byte) {
     return []byte(message)
