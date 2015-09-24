@@ -15,11 +15,11 @@
             <xsl:apply-templates select="CPU"/>
    
             <script> 
-                
-                var serverSocket = new WebSocket("ws://localhost:8080/requestdata");
+                var ip = window.location.href.split("/").pop();
+                var serverSocket = new WebSocket("ws://localhost:8080/requestdata/" +ip);
                 window.setInterval(function() {
-                    console.log("heeej")   
-                    serverSocket.send("hej");
+                    
+                    serverSocket.send(ip);
                     serverSocket.onmessage = function(e) {
                         console.log(e.data)
                     };

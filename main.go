@@ -12,6 +12,7 @@ import (
     db "github.com/julleb/DBFuncs"
     "github.com/gorilla/websocket"
     "github.com/gorilla/mux"
+    "strings"
 )
 
 var upgrader = websocket.Upgrader{
@@ -35,7 +36,7 @@ func main() {
     r.HandleFunc("/public/", visualHandler);
 	r.HandleFunc("/", index)
     
-    r.HandleFunc("/requestdata", requestDataHandler)
+    r.HandleFunc("/requestdata/{ip}", requestDataHandler)
     r.HandleFunc("/newip", formHandler)
 	r.HandleFunc("/{ip}", serverMonitorHandler)
     http.Handle("/", r)    
@@ -89,6 +90,8 @@ func formHandler(res http.ResponseWriter, req *http.Request) {
 
 //handle the Server monitor page
 func serverMonitorHandler(res http.ResponseWriter, req *http.Request) {
+    //here we can get the ip and query the db
+        
     htmlCode := processXSLT("xslt-fake.xsl", "fake.xml")
     io.WriteString(res, string(htmlCode))
 
@@ -106,6 +109,11 @@ func processXSLT(xslFile string, xmlFile string) []byte {
 }
 
 func requestDataHandler(res http.ResponseWriter, req *http.Request) {    
+    
+    //getting the ip from the url    
+    urlArray := strings.Split(req.URL.Path, "/")
+    ip := urlArray[len(urlArray)-1]
+      
     conn, err := upgrader.Upgrade(res, req, nil)
     if err != nil {
         fmt.Println(err)
@@ -124,7 +132,9 @@ func requestDataHandler(res http.ResponseWriter, req *http.Request) {
         fmt.Println("got a message ", read_message)
         message = createMessage("i can be your hero baby")
         */
-        //getDataFromInfoServer(ip)
+        fmt.Println("this is ip " + string(ip))
+        messageFromInfoServer := getDataFromInfoServer(ip)
+        fmt.Println("i got this " ,messageFromInfoServer)
         message = createMessage("i can be your hero baby")
         err = conn.WriteMessage(messageType, message);
         if  err != nil {
@@ -135,7 +145,11 @@ func requestDataHandler(res http.ResponseWriter, req *http.Request) {
 
 func getDataFromInfoServer(ip string) (string) {
     ipAndPort := ip + ":9090"
-    conn, _ := net.Dial("tcp", ipAndPort)
+    conn, err := net.Dial("tcp", ipAndPort)
+    if(err != nil) {
+        fmt.Println(err)
+        return "";  
+    }
     message,_ := bufio.NewReader(conn).ReadString('\n');
     
     return message
