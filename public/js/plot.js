@@ -24,7 +24,7 @@ function namn() {
 
     var updateChart = function () {
 
-
+        
         yVal = yVal +  Math.round(5 + Math.random() *(-5-5));
         dps.push({x: xVal,y: yVal});
 
