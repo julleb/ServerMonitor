@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+  "time"
 )
 
 type serverData struct {
@@ -42,6 +43,11 @@ type information struct {
 	Date
 	CPU
 	Memory
+}
+
+type informations struct {
+	XMLName xml.Name `xml:"informations"`
+	Infos   []information
 }
 
 var upgrader = websocket.Upgrader{
@@ -105,7 +111,7 @@ func serverMonitorHandler(res http.ResponseWriter, req *http.Request) {
 	//getting the ip from the url
 	urlArray := strings.Split(req.URL.Path, "/")
 	ip := urlArray[len(urlArray)-1]
-	getInformationFromDB(ip)
+	_ = getInformationFromDB(ip)
 	//here we can get the ip and query the db
 	htmlCode := processXSLT("xslt-fake.xsl", "fake.xml")
 	io.WriteString(res, string(htmlCode))
@@ -203,39 +209,64 @@ func convertByteArrayToString(arr []byte) string {
 }
 
 func insertXMLtoDB(xmldata string, ip string) {
-    info := information{} //CPU: none, Memory: none
-    err := xml.Unmarshal([]byte(xmldata), &info)
-    if(err != nil) {
-        fmt.Println(err)
-    }
-    
-    var values []interface{}
-    values = getDataFromXML(info.CPU.ServerData, values)
-    values = getDataFromXML(info.Memory.ServerData, values)
-    values = append(values, info.Date.Value)
-    //lets insert the data  into the database
-    insertInformation(ip ,values)
-    
+	info := information{} //CPU: none, Memory: none
+	err := xml.Unmarshal([]byte(xmldata), &info)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var values []interface{}
+	values = getDataFromXML(info.CPU.ServerData, values)
+	values = getDataFromXML(info.Memory.ServerData, values)
+	values = append(values, info.Date.Value)
+	//lets insert the data  into the database
+	insertInformation(ip, values)
+
 }
 
 //query the db to get all data from a certain ip addrs
-func getInformationFromDB(ip string) {
+func getInformationFromDB(ip string) (string) {
+  dateLength := 19 //a date is always 19 letters long
+	var holder informations
 	var values []interface{}
 	values = append(values, ip)
 	rows := db.Query("SELECT * FROM server NATURAL JOIN has NATURAL JOIN information WHERE server.ip=$1", values)
 	for rows.Next() {
 		var info_id, cpu_temp, cpu_load, memory_usage, memory_total int
-		var date, ip string
-		rows.Scan(&info_id, &ip, &cpu_temp, &cpu_load, &memory_usage, &memory_total, &date)
-
+		var ip string
+    var sqlDate time.Time
+		rows.Scan(&info_id, &ip, &cpu_temp, &cpu_load, &memory_usage, &memory_total, &sqlDate)
+    //since our sqlDate has some trash in the end, we need to remove it
+    date := sqlDate.String()[:dateLength]
+		holder = dataToXML(holder,info_id, ip, cpu_temp, cpu_load, memory_usage, memory_total, date)
 	}
+  //convert the holder to XML
+  output, err := xml.MarshalIndent(holder, "", "    ")
+  if err != nil {
+		fmt.Printf("error: %v\n", err)
+	}
+  fmt.Println(convertByteArrayToString(output))
+  return convertByteArrayToString(output)
 }
 
+func dataToXML(holder informations, info_id int, ip string, cpu_temp int, cpu_load int, memory_usage int, memory_total int, sqlDate string) (informations) {
 
-func dataToXML() {
+	t := &serverData{Description: "Temperature", Value: cpu_temp, Unit: "C"}
 
+	t1 := &serverData{Description: "Load", Value: cpu_load, Unit: "%"}
+	a := []serverData{*t, *t1}
+
+	f := &serverData{Description: "Total", Value: memory_total, Unit: "M"}
+	f1 := &serverData{Description: "Used", Value: memory_usage, Unit: "M"}
+	b := []serverData{*f, *f1}
+
+	cpu := &CPU{ServerData: a}
+	mem := &Memory{ServerData: b}
+	date := &Date{Value: sqlDate}
+  i := information{Date: *date, CPU: *cpu, Memory: *mem}
+  holder.Infos = append(holder.Infos, i)
+  return holder
 }
-
 
 //gets the data from the xml and puts it in the values array
 func getDataFromXML(serverdata []serverData, values []interface{}) []interface{} {
