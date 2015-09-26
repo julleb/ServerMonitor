@@ -35,7 +35,8 @@
 
             <script type="text/javascript">
               window.onload = function () {
-              namn();
+              console.log("init chart");
+              initChart();
               }
             </script>
 
@@ -68,7 +69,9 @@
           var table = $("#changingTable").children();
           table.append("<tr><td>"+ descr + "</td><td>"+ value + "</td><td> " + unit + " </td></tr>");
           // console.log(descr + " " + value + " " + unit);
-
+          if(descr === "Temperature") {
+          updateChart(value);
+          }
           });
           };
           },5000);
