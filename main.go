@@ -203,7 +203,6 @@ func convertByteArrayToString(arr []byte) string {
 }
 
 func insertXMLtoDB(xmldata string, ip string) {
-<<<<<<< HEAD
     info := information{} //CPU: none, Memory: none
     err := xml.Unmarshal([]byte(xmldata), &info)
     if(err != nil) {
@@ -216,8 +215,6 @@ func insertXMLtoDB(xmldata string, ip string) {
     //lets insert the data  into the database
     insertInformation(ip ,values)
     
-    
-
 }
 
 //query the db to get all data from a certain ip addrs
@@ -234,7 +231,9 @@ func getInformationFromDB(ip string) {
 }
 
 
-func dataToXML()
+func dataToXML() {
+
+}
 
 
 //gets the data from the xml and puts it in the values array
