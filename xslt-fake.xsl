@@ -29,14 +29,16 @@
             <p class="lead">Foo</p>
             <div id="changingTable">
             </div>
-
-            <div id="chartContainer" style="height: 300px; width: 100%;">
+            <div id="horizontalContainer">
+              <div id="chartContainerTemperature" style="height: 300px; width: 50%; float:left;"> </div>
+              <div id="chartContainerCPULoad" style="height: 300px; width: 50%;"> </div>
+            </div>
+            <div id="chartContainerUsedMemory" style="height: 300px; width: 100%;">
             </div>
 
             <script type="text/javascript">
               window.onload = function () {
-              console.log("init chart");
-              initChart();
+              initCharts();
               }
             </script>
 
@@ -69,9 +71,7 @@
           var table = $("#changingTable").children();
           table.append("<tr><td>"+ descr + "</td><td>"+ value + "</td><td> " + unit + " </td></tr>");
           // console.log(descr + " " + value + " " + unit);
-          if(descr === "Temperature") {
-          updateChart(value);
-          }
+          updateChart(descr, value);
           });
           };
           },5000);
