@@ -212,7 +212,7 @@ func insertXMLtoDB(xmldata string, ip string) {
     var values []interface{}
     values = getDataFromXML(info.CPU.ServerData, values)
     values = getDataFromXML(info.Memory.ServerData, values)
-    values = getDataFromXML(info.Date.ServerData, values 
+    values = append(values, info.Date.Value)
     //lets insert the data  into the database
     insertInformation(ip ,values)
     
@@ -249,7 +249,7 @@ func getDataFromXML(serverdata []serverData, values []interface{}) []interface{}
 //and create an relation between the information and the ip in the db
 func insertInformation(ip string, values []interface{}) {
 	//would be nice to do a transaction here, for the coolness
-	rows := db.Query("INSERT INTO information(cpu_temp,cpu_load,memory_usage,memory_total, date) VALUES($1,$2,$3,$4, now()) RETURNING info_id", values)
+	rows := db.Query("INSERT INTO information(cpu_temp,cpu_load,memory_usage,memory_total, date) VALUES($1,$2,$3,$4,$5) RETURNING info_id", values)
 	var info_id int
 	for rows.Next() {
 		rows.Scan(&info_id)
