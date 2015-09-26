@@ -8,6 +8,10 @@
 /*change to random db before we drop it*/
 
 /* \i /home/jb/go/src/github.com/julleb/ServerMonitor/database.sql */
+/*select * from server NATURAL JOIN information ON id =  */
+
+
+/*serial primary key --> increment the primary key in each insert*/
 
 \c julle; 
 drop database servermonitor;
@@ -23,7 +27,7 @@ ip varchar(16) PRIMARY KEY
 create table information(
 info_id SERIAL PRIMARY KEY,
 cpu_temp int,
-cpu_load
+cpu_load int,
 memory_usage int,
 memory_total int
 );
@@ -36,7 +40,4 @@ PRIMARY KEY (ip,info_id)
 );
 
 
-/*select * from server NATURAL JOIN information ON id =  */
 
-
-/*serial primary key --> increment the primary key in each insert*/

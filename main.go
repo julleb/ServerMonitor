@@ -168,6 +168,7 @@ func requestDataHandler(res http.ResponseWriter, req *http.Request) {
             }
             ipExist = true  
         }
+
         insertXMLtoDB(messageFromInfoServer, ip)
         
         //we got a connect to the InfoServer
@@ -237,7 +238,17 @@ func getDataFromXML(serverdata []serverData, values []interface{}) ([]interface{
 //insert data into the information table 
 //and create an relation between the information and the ip in the db
 func insertInformation(ip string ,values []interface{}) {
-	_ = db.Query("INSERT INTO information(id,cpu_temp,cpu_load,memory_usage,memory_total) VALUES($1,$2,$3,$4,$5)", values)
+    //would be nice to do a transaction here, for the coolness	
+    rows := db.Query("INSERT INTO information(cpu_temp,cpu_load,memory_usage,memory_total) VALUES($1,$2,$3,$4) RETURNING info_id", values)
+    var info_id int
+    for rows.Next() {
+        rows.Scan(&info_id)
+        fmt.Println("heeehehe " , info_id)
+    }
+    var hasValues []interface{}
+    hasValues = append(hasValues, ip)
+    hasValues = append(hasValues, info_id)
+    rows = db.Query("INSERT INTO has(ip, info_id) VALUES($1,$2)", hasValues)
 }
 
 
