@@ -92,7 +92,6 @@ func visualHandler(res http.ResponseWriter, req *http.Request) {
 //function for handling the html form
 func formHandler(res http.ResponseWriter, req *http.Request) {
 	ip := req.PostFormValue("ip")
-	fmt.Println(ip)
 	//redirect the user to the ip url
 	http.Redirect(res, req, "/"+ip, 301)
 	//templates.ExecuteTemplate(res, "index", s) //render a page
@@ -103,9 +102,7 @@ func serverMonitorHandler(res http.ResponseWriter, req *http.Request) {
 	//getting the ip from the url
 	urlArray := strings.Split(req.URL.Path, "/")
 	ip := urlArray[len(urlArray)-1]
-	fmt.Println(ip)
-	
-	 
+    getInformationFromDB(ip)
 	//here we can get the ip and query the db
 	htmlCode := processXSLT("xslt-fake.xsl", "fake.xml")
 	io.WriteString(res, string(htmlCode))
@@ -212,7 +209,6 @@ func insertXMLtoDB(xmldata string, ip string) {
     if(err != nil) {
         fmt.Println(err)
     }
-    fmt.Println(xmldata)
     
     var values []interface{}
     values = getDataFromXML(info.CPU.ServerData, values)
@@ -228,12 +224,17 @@ func getInformationFromDB(ip string)  {
       var values []interface{}
       values = append(values, ip)
       rows := db.Query("SELECT * FROM server NATURAL JOIN has NATURAL JOIN information WHERE server.ip=$1", values);
-    
+      fmt.Println("-------")
       for rows.Next() {
-            var cpu_temp, cpu_load, memory_usage, memory_total int
-            rows.Scan(&cpu_temp, &cpu_load, &memory_usage, &memory_total)
+            var info_id,cpu_temp, cpu_load, memory_usage, memory_total []byte
+            var date string
+            rows.Scan(&info_id,&cpu_temp, &cpu_load, &memory_usage, &memory_total, &date)  
+            fmt.Println(info_id)
+            fmt.Println(cpu_temp)
+            fmt.Println(memory_usage)
                  
       }
+      fmt.Println("-------")
 }
 
 //gets the data from the xml and puts it in the values array
@@ -253,7 +254,6 @@ func insertInformation(ip string ,values []interface{}) {
     var info_id int
     for rows.Next() {
         rows.Scan(&info_id)
-        fmt.Println("heeehehe " , info_id)
     }
     var hasValues []interface{}
     hasValues = append(hasValues, ip)
