@@ -29,7 +29,8 @@ info_id SERIAL PRIMARY KEY,
 cpu_temp int,
 cpu_load int,
 memory_usage int,
-memory_total int
+memory_total int,
+date DATE
 );
 
 

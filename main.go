@@ -104,16 +104,8 @@ func serverMonitorHandler(res http.ResponseWriter, req *http.Request) {
 	urlArray := strings.Split(req.URL.Path, "/")
 	ip := urlArray[len(urlArray)-1]
 	fmt.Println(ip)
-	/*
-	   if ipExists(ip) {
-	      var values []interface{}
-	      values = append(values, ip)
-	      rows := db.Query("SELECT * FROM server NATURAL JOIN has NATURAL JOIN information WHERE server.ip=has.ip", values);
-	      for rows.Next() {
-                
-	      }
-	   }
-    */
+	
+	 
 	//here we can get the ip and query the db
 	htmlCode := processXSLT("xslt-fake.xsl", "fake.xml")
 	io.WriteString(res, string(htmlCode))
@@ -186,6 +178,8 @@ func requestDataHandler(res http.ResponseWriter, req *http.Request) {
     }
 }
 
+
+//Gets the xml data from the InfoServer via socket and return it as a string
 func getDataFromInfoServer(ip string) (string, error) {
     ipAndPort := ip + ":9090"
     conn, err := net.Dial("tcp", ipAndPort)
@@ -201,10 +195,12 @@ func getDataFromInfoServer(ip string) (string, error) {
     return message,err
 }
 
+//used for converting the message from string to byte
 func createMessage(message string) []byte {
 	return []byte(message)
 }
 
+//used for converting message from byte to string
 func convertByteArrayToString(arr []byte) string {
 	return string(arr[:])
 }
@@ -221,9 +217,23 @@ func insertXMLtoDB(xmldata string, ip string) {
     var values []interface{}
     values = getDataFromXML(info.CPU.ServerData, values)
     values = getDataFromXML(info.Memory.ServerData, values)
+    //lets insert the data  into the database
     insertInformation(ip ,values)
     
     
+}
+
+//query the db to get all data from a certain ip addrs
+func getInformationFromDB(ip string)  {
+      var values []interface{}
+      values = append(values, ip)
+      rows := db.Query("SELECT * FROM server NATURAL JOIN has NATURAL JOIN information WHERE server.ip=$1", values);
+    
+      for rows.Next() {
+            var cpu_temp, cpu_load, memory_usage, memory_total int
+            rows.Scan(&cpu_temp, &cpu_load, &memory_usage, &memory_total)
+                 
+      }
 }
 
 //gets the data from the xml and puts it in the values array
@@ -239,7 +249,7 @@ func getDataFromXML(serverdata []serverData, values []interface{}) ([]interface{
 //and create an relation between the information and the ip in the db
 func insertInformation(ip string ,values []interface{}) {
     //would be nice to do a transaction here, for the coolness	
-    rows := db.Query("INSERT INTO information(cpu_temp,cpu_load,memory_usage,memory_total) VALUES($1,$2,$3,$4) RETURNING info_id", values)
+    rows := db.Query("INSERT INTO information(cpu_temp,cpu_load,memory_usage,memory_total, date) VALUES($1,$2,$3,$4, now()) RETURNING info_id", values)
     var info_id int
     for rows.Next() {
         rows.Scan(&info_id)
@@ -251,7 +261,7 @@ func insertInformation(ip string ,values []interface{}) {
     rows = db.Query("INSERT INTO has(ip, info_id) VALUES($1,$2)", hasValues)
 }
 
-
+//addes the ip into the database
 func insertIP(ip string) {
 	var values []interface{}
 	values = append(values, ip)
@@ -259,7 +269,7 @@ func insertIP(ip string) {
     db.DeferRows(rows)
     
 }
-
+//checks if the ip exists in the database
 func ipExists(ip string) bool {
 	var values []interface{}
 	values = append(values, ip)
