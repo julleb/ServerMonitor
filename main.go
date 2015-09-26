@@ -211,7 +211,8 @@ func insertXMLtoDB(xmldata string, ip string) {
     
     var values []interface{}
     values = getDataFromXML(info.CPU.ServerData, values)
-    values = getDataFromXML(info.Memory.ServerData, values) 
+    values = getDataFromXML(info.Memory.ServerData, values)
+    values = getDataFromXML(info.Date.ServerData, values 
     //lets insert the data  into the database
     insertInformation(ip ,values)
     
