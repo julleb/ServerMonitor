@@ -224,19 +224,15 @@ func getInformationFromDB(ip string)  {
       var values []interface{}
       values = append(values, ip)
       rows := db.Query("SELECT * FROM server NATURAL JOIN has NATURAL JOIN information WHERE server.ip=$1", values);
-      fmt.Println("-------")
-      fmt.Println(rows.Columns())
       for rows.Next() {
             var info_id,cpu_temp, cpu_load, memory_usage, memory_total int
             var date, ip string
             rows.Scan(&info_id, &ip, &cpu_temp, &cpu_load, &memory_usage, &memory_total, &date)  
-            fmt.Println(info_id)
-            fmt.Println(cpu_temp)
-            fmt.Println(memory_usage)
-                 
+                      
       }
-      fmt.Println("-------")
 }
+
+func dataToXML() 
 
 //gets the data from the xml and puts it in the values array
 func getDataFromXML(serverdata []serverData, values []interface{}) ([]interface{}){ 

@@ -30,7 +30,7 @@ cpu_temp int,
 cpu_load int,
 memory_usage int,
 memory_total int,
-date DATE
+date Timestamp
 );
 
 
