@@ -212,7 +212,7 @@ func insertXMLtoDB(xmldata string, ip string) {
     
     var values []interface{}
     values = getDataFromXML(info.CPU.ServerData, values)
-    values = getDataFromXML(info.Memory.ServerData, values)
+    values = getDataFromXML(info.Memory.ServerData, values) 
     //lets insert the data  into the database
     insertInformation(ip ,values)
     
@@ -232,7 +232,7 @@ func getInformationFromDB(ip string)  {
       }
 }
 
-func dataToXML() 
+
 
 //gets the data from the xml and puts it in the values array
 func getDataFromXML(serverdata []serverData, values []interface{}) ([]interface{}){ 
