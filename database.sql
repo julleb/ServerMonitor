@@ -23,9 +23,9 @@ ip varchar(16) PRIMARY KEY
 create table information(
 info_id SERIAL PRIMARY KEY,
 cpu_temp int,
+cpu_load
 memory_usage int,
-memory_total int,
-total_memory int
+memory_total int
 );
 
 

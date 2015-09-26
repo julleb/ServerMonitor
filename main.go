@@ -12,7 +12,34 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+    "encoding/xml"
 )
+
+
+
+type serverData struct {
+	Description string
+	Value       int    `xml:"value"`
+	Unit        string `xml:"unit,attr"`
+	Comment     string `xml:",comment"`
+}
+
+type CPU struct {
+	XMLName    xml.Name     `xml:"CPU"`
+	ServerData []serverData `xml:"CPU>ServerData"`
+}
+
+type Memory struct {
+	XMLName    xml.Name     `xml:"Memory"`
+	ServerData []serverData `xml:"Memory>ServerData"`
+}
+
+type information struct {
+	XMLName xml.Name `xml:"information"`
+	CPU
+	Memory
+}
+
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024, //might need to increase this?
@@ -77,7 +104,7 @@ func serverMonitorHandler(res http.ResponseWriter, req *http.Request) {
 	urlArray := strings.Split(req.URL.Path, "/")
 	ip := urlArray[len(urlArray)-1]
 	fmt.Println(ip)
-	
+	/*
 	   if ipExists(ip) {
 	      var values []interface{}
 	      values = append(values, ip)
@@ -86,6 +113,7 @@ func serverMonitorHandler(res http.ResponseWriter, req *http.Request) {
                 
 	      }
 	   }
+    */
 	//here we can get the ip and query the db
 	htmlCode := processXSLT("xslt-fake.xsl", "fake.xml")
 	io.WriteString(res, string(htmlCode))
@@ -105,7 +133,7 @@ func processXSLT(xslFile string, xmlFile string) []byte {
 
 func requestDataHandler(res http.ResponseWriter, req *http.Request) {    
     
-    ipExists := false //used for not querying the db all the time
+    ipExist := false //used for not querying the db all the time
     //getting the ip from the url    
     urlArray := strings.Split(req.URL.Path, "/")
     ip := urlArray[len(urlArray)-1]
@@ -133,12 +161,14 @@ func requestDataHandler(res http.ResponseWriter, req *http.Request) {
         
         //we have to insert the ip if it doesnt exists. Since we are doing a while loop we
         //dont want to query the db all the time, instead we use an variable for the checking
-        if ipExists == false {
+        
+         if ipExist == false {
             if !ipExists(ip) { //the ip doesnt exist in db
                 insertIP(ip) 
             }
-            ipExists = true  
+            ipExist = true  
         }
+        insertXMLtoDB(messageFromInfoServer, ip)
         
         //we got a connect to the InfoServer
         //TODO add the data to the server!
@@ -178,16 +208,45 @@ func convertByteArrayToString(arr []byte) string {
 	return string(arr[:])
 }
 
+
+func insertXMLtoDB(xmldata string, ip string) {
+    info := information{} //CPU: none, Memory: none
+    err := xml.Unmarshal([]byte(xmldata), &info)
+    if(err != nil) {
+        fmt.Println(err)
+    }
+    fmt.Println(xmldata)
+    
+    var values []interface{}
+    values = getDataFromXML(info.CPU.ServerData, values)
+    values = getDataFromXML(info.Memory.ServerData, values)
+    insertInformation(ip ,values)
+    
+    
+}
+
+//gets the data from the xml and puts it in the values array
+func getDataFromXML(serverdata []serverData, values []interface{}) ([]interface{}){ 
+    for i := 0; i < len(serverdata); i++ {
+        values = append(values,  serverdata[i].Value)
+    }    
+    return values
+} 
+
+
+//insert data into the information table 
+//and create an relation between the information and the ip in the db
+func insertInformation(ip string ,values []interface{}) {
+	_ = db.Query("INSERT INTO information(id,cpu_temp,cpu_load,memory_usage,memory_total) VALUES($1,$2,$3,$4,$5)", values)
+}
+
+
 func insertIP(ip string) {
 	var values []interface{}
 	values = append(values, ip)
 	rows := db.Query("INSERT INTO server(ip) values($1)", values)
-    DeferRows(rows)
+    db.DeferRows(rows)
     
-}
-
-func insertInformation(values []interface{}) {
-	_ = db.Query("INSERT INTO information(id,cpu_temp,memory_usage,memory_total,total_memory) VALUES($1, $2,$3,$4,$5)", values)
 }
 
 func ipExists(ip string) bool {
