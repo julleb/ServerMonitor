@@ -39,14 +39,6 @@ func main() {
 	r.HandleFunc("/newip", formHandler)
 	r.HandleFunc("/{ip}", serverMonitorHandler)
 
-	/*
-			http.HandleFunc("/public/", visualHandler)
-			http.HandleFunc("/", index)
-
-		    http.HandleFunc("/requestdata", requestDataHandler)
-			http.HandleFunc("/newip", formHandler)
-	*/
-
 	s := http.StripPrefix("/public/", http.FileServer(http.Dir("./public/")))
 	r.PathPrefix("/public/").Handler(s)
 	http.Handle("/", r)
@@ -85,17 +77,15 @@ func serverMonitorHandler(res http.ResponseWriter, req *http.Request) {
 	urlArray := strings.Split(req.URL.Path, "/")
 	ip := urlArray[len(urlArray)-1]
 	fmt.Println(ip)
-	/*
+	
 	   if ipExists(ip) {
 	      var values []interface{}
 	      values = append(values, ip)
 	      rows := db.Query("SELECT * FROM server NATURAL JOIN has NATURAL JOIN information WHERE server.ip=has.ip", values);
 	      for rows.Next() {
-
-
+                
 	      }
 	   }
-	*/
 	//here we can get the ip and query the db
 	htmlCode := processXSLT("xslt-fake.xsl", "fake.xml")
 	io.WriteString(res, string(htmlCode))
@@ -115,6 +105,7 @@ func processXSLT(xslFile string, xmlFile string) []byte {
 
 func requestDataHandler(res http.ResponseWriter, req *http.Request) {    
     
+    ipExists := false //used for not querying the db all the time
     //getting the ip from the url    
     urlArray := strings.Split(req.URL.Path, "/")
     ip := urlArray[len(urlArray)-1]
@@ -140,9 +131,20 @@ func requestDataHandler(res http.ResponseWriter, req *http.Request) {
             return
         }
         
+        //we have to insert the ip if it doesnt exists. Since we are doing a while loop we
+        //dont want to query the db all the time, instead we use an variable for the checking
+        if ipExists == false {
+            if !ipExists(ip) { //the ip doesnt exist in db
+                insertIP(ip) 
+            }
+            ipExists = true  
+        }
+        
         //we got a connect to the InfoServer
         //TODO add the data to the server!
-        
+               
+
+
         //send the message to the firefox client
         message = createMessage(messageFromInfoServer)
         err = conn.WriteMessage(messageType, message);
@@ -179,16 +181,9 @@ func convertByteArrayToString(arr []byte) string {
 func insertIP(ip string) {
 	var values []interface{}
 	values = append(values, ip)
-	row := db.Query("INSERT INTO server(ip) values($1)", values)
-	//db.DeferRows(row)
-	fmt.Println(row.Columns())
-
-	for row.Next() {
-		var col string
-		row.Scan(&col)
-		fmt.Println("Weee " + col)
-	}
-	db.DeferRows(row)
+	rows := db.Query("INSERT INTO server(ip) values($1)", values)
+    DeferRows(rows)
+    
 }
 
 func insertInformation(values []interface{}) {
