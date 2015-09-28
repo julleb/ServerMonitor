@@ -111,7 +111,7 @@ func serverMonitorHandler(res http.ResponseWriter, req *http.Request) {
 	//getting the ip from the url
 	urlArray := strings.Split(req.URL.Path, "/")
 	ip := urlArray[len(urlArray)-1]
-	_ = getInformationFromDB(ip)
+	_ = getInformationFromDB(ip) //returns the old data as xml
 	//here we can get the ip and query the db
 	htmlCode := processXSLT("xslt-fake.xsl", "fake.xml")
 	io.WriteString(res, string(htmlCode))
