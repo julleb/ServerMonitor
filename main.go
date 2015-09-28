@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/xml"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -13,13 +14,18 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-  "time"
+	"time"
 )
+
+type Unit struct {
+	XMLName xml.Name `xml:"Unit"`
+	Value   string   `xml:",innerxml"`
+}
 
 type serverData struct {
 	Description string
 	Value       int    `xml:"value"`
-	Unit        string `xml:"unit,attr"`
+	Unit        Unit   `xml:"Unit"`
 	Comment     string `xml:",comment"`
 }
 
@@ -111,9 +117,9 @@ func serverMonitorHandler(res http.ResponseWriter, req *http.Request) {
 	//getting the ip from the url
 	urlArray := strings.Split(req.URL.Path, "/")
 	ip := urlArray[len(urlArray)-1]
-	_ = getInformationFromDB(ip) //returns the old data as xml
+	xmlString := getInformationFromDB(ip) //returns the old data as xml
 	//here we can get the ip and query the db
-	htmlCode := processXSLT("xslt-fake.xsl", "fake.xml")
+	htmlCode := processXSLTstdin("xslt-fake.xsl", xmlString)
 	io.WriteString(res, string(htmlCode))
 
 }
@@ -126,6 +132,25 @@ func processXSLT(xslFile string, xmlFile string) []byte {
 	}
 	output, _ := cmd.Output()
 	//fmt.Printf("yooo %s\n", output)
+	return output
+}
+
+func processXSLTstdin(xslFile string, xmlString string) []byte {
+	b := bytes.NewBufferString(xmlString)
+	cmd := exec.Cmd{
+		Args:  []string{"xsltproc", xslFile, "-"},
+		Env:   os.Environ(),
+		Path:  "/usr/bin/xsltproc",
+		Stdin: b, // io.Reader
+	}
+	output, _ := cmd.Output()
+	fmt.Println("nu börjar XSLTPROC")
+	fmt.Println("nu börjar XSLTPROC")
+	fmt.Println("nu börjar XSLTPROC")
+	fmt.Println("nu börjar XSLTPROC")
+	fmt.Println("nu börjar XSLTPROC")
+	fmt.Println("nu börjar XSLTPROC")
+	fmt.Printf("yooo %s\n", output)
 	return output
 }
 
@@ -225,8 +250,8 @@ func insertXMLtoDB(xmldata string, ip string) {
 }
 
 //query the db to get all data from a certain ip addrs
-func getInformationFromDB(ip string) (string) {
-  dateLength := 19 //a date is always 19 letters long
+func getInformationFromDB(ip string) string {
+	dateLength := 19 //a date is always 19 letters long
 	var holder informations
 	var values []interface{}
 	values = append(values, ip)
@@ -234,38 +259,63 @@ func getInformationFromDB(ip string) (string) {
 	for rows.Next() {
 		var info_id, cpu_temp, cpu_load, memory_usage, memory_total int
 		var ip string
-    var sqlDate time.Time
+		var sqlDate time.Time
 		rows.Scan(&info_id, &ip, &cpu_temp, &cpu_load, &memory_usage, &memory_total, &sqlDate)
-    //since our sqlDate has some trash in the end, we need to remove it
-    date := sqlDate.String()[:dateLength]
-		holder = dataToXML(holder,info_id, ip, cpu_temp, cpu_load, memory_usage, memory_total, date)
+		//since our sqlDate has some trash in the end, we need to remove it
+		date := sqlDate.String()[:dateLength]
+		holder = dataToXML(holder, info_id, ip, cpu_temp, cpu_load, memory_usage, memory_total, date)
 	}
-  //convert the holder to XML
-  output, err := xml.MarshalIndent(holder, "", "    ")
-  if err != nil {
+	//convert the holder to XML
+	output, err := xml.MarshalIndent(holder, "", "    ")
+	if err != nil {
 		fmt.Printf("error: %v\n", err)
 	}
-  fmt.Println(convertByteArrayToString(output))
-  return convertByteArrayToString(output)
+	header := `<?xml version="1.0" encoding="UTF-8"?>
+
+
+<!DOCTYPE informations [
+<!ELEMENT informations (information*) >
+<!ELEMENT information (Date, CPU*, Memory*) >
+<!ELEMENT Date (#PCDATA) >
+<!ELEMENT CPU (ServerData*)>
+<!ELEMENT Memory (ServerData*)>
+<!ELEMENT ServerData (Description, value)>
+<!ATTLIST ServerData unit CDATA #IMPLIED>
+<!ELEMENT Description (#PCDATA)>
+<!ELEMENT value (#PCDATA)>
+
+<!ENTITY degree "&#176;">
+
+]>
+
+
+`
+	fmt.Println("kolla under::::")
+	fmt.Println("kolla under::::")
+	fmt.Println("kolla under::::")
+	fmt.Println("kolla under::::")
+	fmt.Println("kolla under::::")
+	fmt.Println(header + convertByteArrayToString(output))
+	return header + convertByteArrayToString(output)
 }
 
-func dataToXML(holder informations, info_id int, ip string, cpu_temp int, cpu_load int, memory_usage int, memory_total int, sqlDate string) (informations) {
+func dataToXML(holder informations, info_id int, ip string, cpu_temp int, cpu_load int, memory_usage int, memory_total int, sqlDate string) informations {
 
-	t := &serverData{Description: "Temperature", Value: cpu_temp, Unit: "C"}
+	t := &serverData{Description: "Temperature", Value: cpu_temp, Unit: Unit{Value: "C&degree;"}}
 
-	t1 := &serverData{Description: "Load", Value: cpu_load, Unit: "%"}
+	t1 := &serverData{Description: "Load", Value: cpu_load, Unit: Unit{Value: "%"}}
 	a := []serverData{*t, *t1}
 
-	f := &serverData{Description: "Total", Value: memory_total, Unit: "M"}
-	f1 := &serverData{Description: "Used", Value: memory_usage, Unit: "M"}
+	f := &serverData{Description: "Total", Value: memory_total, Unit: Unit{Value: "MB"}}
+	f1 := &serverData{Description: "Used", Value: memory_usage, Unit: Unit{Value: "MB"}}
 	b := []serverData{*f, *f1}
 
 	cpu := &CPU{ServerData: a}
 	mem := &Memory{ServerData: b}
 	date := &Date{Value: sqlDate}
-  i := information{Date: *date, CPU: *cpu, Memory: *mem}
-  holder.Infos = append(holder.Infos, i)
-  return holder
+	i := information{Date: *date, CPU: *cpu, Memory: *mem}
+	holder.Infos = append(holder.Infos, i)
+	return holder
 }
 
 //gets the data from the xml and puts it in the values array

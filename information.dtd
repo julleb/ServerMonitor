@@ -1,10 +1,14 @@
-<!ELEMENT information (CPU*, Memory*) >
-<!ELEMENT CPU (temp*)>
-<!ELEMENT Memory (total*, usage*)>
-<!ELEMENT temp (#PCDATA)>
-<!ATTLIST temp unit CDATA #IMPLIED>
+<!ELEMENT informations (information) >
+<!ELEMENT information (Date, CPU*, Memory*) >
+<!ELEMENT Date (#PCDATA) >
+<!ELEMENT CPU (ServerData*)>
+<!ELEMENT Memory (ServerData*)>
+<!ELEMENT ServerData (Description, value, Unit)>
+<!-- Attlist funkade inte -->
+<!-- <!ATTLIST ServerData unit CDATA #IMPLIED> -->
 
-<!ELEMENT total (#PCDATA)>
-<!ELEMENT usage (#PCDATA)>
- 
+<!ELEMENT Unit (#PCDATA) >
+<!ELEMENT Description (#PCDATA)>
+<!ELEMENT value (#PCDATA)>
+
 <!ENTITY degree "&#176;">
