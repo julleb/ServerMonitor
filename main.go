@@ -44,17 +44,27 @@ type Date struct {
 	Value   string   `xml:"Date"`
 }
 
+
 type information struct {
 	XMLName xml.Name `xml:"information"`
 	Date
 	CPU
 	Memory
 }
+type funfacts struct {
+    Attr string `xml:",attr"`
+    Min int `xml:"Min"`
+    Max int `xml:"Max"`
+    Avg float32 `xml:"Avg"`
+}
 
 type informations struct {
 	XMLName xml.Name `xml:"informations"`
 	Infos   []information
+    Funfacts funfacts
 }
+
+
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024, //might need to increase this?
@@ -144,13 +154,6 @@ func processXSLTstdin(xslFile string, xmlString string) []byte {
 		Stdin: b, // io.Reader
 	}
 	output, _ := cmd.Output()
-	fmt.Println("nu börjar XSLTPROC")
-	fmt.Println("nu börjar XSLTPROC")
-	fmt.Println("nu börjar XSLTPROC")
-	fmt.Println("nu börjar XSLTPROC")
-	fmt.Println("nu börjar XSLTPROC")
-	fmt.Println("nu börjar XSLTPROC")
-	fmt.Printf("yooo %s\n", output)
 	return output
 }
 
@@ -265,6 +268,9 @@ func getInformationFromDB(ip string) string {
 		date := sqlDate.String()[:dateLength]
 		holder = dataToXML(holder, info_id, ip, cpu_temp, cpu_load, memory_usage, memory_total, date)
 	}
+    
+    getTresholdsForCPU(&holder,ip)
+    
 	//convert the holder to XML
 	output, err := xml.MarshalIndent(holder, "", "    ")
 	if err != nil {
@@ -274,7 +280,7 @@ func getInformationFromDB(ip string) string {
 
 
 <!DOCTYPE informations [
-<!ELEMENT informations (information*) >
+<!ELEMENT informations (information*, Min, Max) >
 <!ELEMENT information (Date, CPU*, Memory*) >
 <!ELEMENT Date (#PCDATA) >
 <!ELEMENT CPU (ServerData*)>
@@ -283,20 +289,33 @@ func getInformationFromDB(ip string) string {
 <!ATTLIST ServerData unit CDATA #IMPLIED>
 <!ELEMENT Description (#PCDATA)>
 <!ELEMENT value (#PCDATA)>
+<!ELEMENT Max (#PCDATA)>
+<!ELEMENT Min (#PCDATA)>
 
 <!ENTITY degree "&#176;">
 
 ]>
 
 
+
 `
-	fmt.Println("kolla under::::")
-	fmt.Println("kolla under::::")
-	fmt.Println("kolla under::::")
-	fmt.Println("kolla under::::")
-	fmt.Println("kolla under::::")
-	fmt.Println(header + convertByteArrayToString(output))
-	return header + convertByteArrayToString(output)
+    fmt.Println(convertByteArrayToString(output))
+	return  header+convertByteArrayToString(output)
+}
+
+
+//adds the average, min and max of cpu_temp to the struct holder from the db
+func getTresholdsForCPU(holder *informations, ip string) {
+    var values []interface{}
+	values = append(values, ip)
+	rows := db.Query("SELECT max(cpu_temp), min(cpu_temp), avg(cpu_temp) FROM server NATURAL JOIN has NATURAL JOIN information WHERE server.ip=$1", values)
+    var max, min int
+    var avg float32
+	for rows.Next() {
+        rows.Scan(&max, &min, &avg)
+        holder.Funfacts = funfacts{Attr: "temp", Min: min, Max: max, Avg: avg}
+       
+    }
 }
 
 func dataToXML(holder informations, info_id int, ip string, cpu_temp int, cpu_load int, memory_usage int, memory_total int, sqlDate string) informations {
