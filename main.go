@@ -56,6 +56,7 @@ type funfacts struct {
     Min int `xml:"Min"`
     Max int `xml:"Max"`
     Avg float32 `xml:"Avg"`
+    Unit Unit 
 }
 
 type informations struct {
@@ -313,7 +314,8 @@ func getTresholdsForCPU(holder *informations, ip string) {
     var avg float32
 	for rows.Next() {
         rows.Scan(&max, &min, &avg)
-        holder.Funfacts = funfacts{Attr: "temp", Min: min, Max: max, Avg: avg}
+        u := Unit{Value: "C&degree;"}
+        holder.Funfacts = funfacts{Attr: "temp", Min: min, Max: max, Avg: avg, Unit: u}
        
     }
 }
