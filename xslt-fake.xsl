@@ -49,6 +49,8 @@
               i++;
               });
               initCharts(data);
+              // hide
+              $("#historyTable").empty();
               }
             </script>
 
@@ -59,7 +61,23 @@
                   <xsl:apply-templates select="information"/>
                 </table>
               </div>
-              <div id="chartContainerTemperatureHistory" style="height: 300px; width: 70%;"> </div>
+              <div id="chartContainerTemperatureHistory" style="width: 70%; float: left;"> </div>
+              <table id="funFacts" class="table table-bordered" style="margin-top:40px;float:right; width:30%;">
+                <thead>
+                  <tr>
+                    <th>Min</th>
+                    <th>Max</th>
+                    <th>Avg</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td> <xsl:value-of select="Funfacts/Min"></xsl:value-of> </td>
+                    <td> <xsl:value-of select="Funfacts/Max"></xsl:value-of> </td>
+                    <td> <xsl:value-of select="Funfacts/Avg"></xsl:value-of> </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
           </div>
@@ -129,9 +147,6 @@
     <td id="tempValue"> <xsl:value-of select="value"></xsl:value-of> </td>
     <td> <xsl:value-of select="Unit"></xsl:value-of> </td>
     <td> <xsl:value-of select="Description"></xsl:value-of> </td>
-
   </xsl:template>
-
-
 
 </xsl:stylesheet>
