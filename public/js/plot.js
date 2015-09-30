@@ -5,8 +5,12 @@ var xValTemperature = 2;
 var xValCPULoad = 2;
 var xValUsedMemory = 2;
 var chart = null;
-function initCharts() {
+
+function initCharts(historyDatapoints) {
     chartTemperature = new CanvasJS.Chart("chartContainerTemperature",{
+        title :{
+            text: "Temperature"
+        },
         axisX: {
             title: "Timestep",
             interval: 1
@@ -21,10 +25,28 @@ function initCharts() {
             dataPoints : dpsTemperature
         }]
     });
+    // This chart is built once (it does not receive more datapoints during runtime).
+    chartTemperatureHistory = new CanvasJS.Chart("chartContainerTemperatureHistory",{
+        title :{
+            text: "Temperature History"
+        },
+        axisX: {
+            title: "Timestep",
+        },
+        axisY: {
+            title: "Temperature [C]",
+            minimum: 0,
+            maximum: 100
+        },
+        data: [{
+            type: "line",
+            dataPoints : historyDatapoints
+        }]
+    });
     chartCPULoad = new CanvasJS.Chart("chartContainerCPULoad",{
-        // title :{
-        //     text: "Live Data"
-        // },
+        title :{
+            text: "CPU Load"
+        },
         axisX: {
             title: "Timestep",
             interval: 1
@@ -40,7 +62,9 @@ function initCharts() {
         }]
     });
     chartUsedMemory = new CanvasJS.Chart("chartContainerUsedMemory",{
-        axisX: {
+        title :{
+            text: "Used Memory"
+        },       axisX: {
             title: "Timestep",
             interval: 1
         },
@@ -51,7 +75,7 @@ function initCharts() {
             maximum: 5000
         },
         data: [{
-            type: "column",
+            type: "area",
             dataPoints : dpsUsedMemory
         }]
     });
@@ -59,6 +83,7 @@ function initCharts() {
     chartTemperature.render();
     chartCPULoad.render();
     chartUsedMemory.render();
+    chartTemperatureHistory.render();
 }
 
 function updateChart(chartType, newData) {
