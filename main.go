@@ -79,10 +79,24 @@ func serverMonitorHandler(res http.ResponseWriter, req *http.Request) {
 	ip := urlArray[len(urlArray)-1]
 	xmlString := getInformationFromDB(ip) //returns the old data as xml
 	//here we can get the ip and query the db
-	htmlCode := processXSLTstdin("xslt-fake.xsl", xmlString)
+
+    xslFile := determineStylesheet(req.UserAgent())
+
+	htmlCode := processXSLTstdin(xslFile, xmlString) //"xslt-fake.xsl"
 	io.WriteString(res, string(htmlCode))
 
 }
+
+//determine which stylesheet to use, depending on the users UserAgent
+//in this way, we can use different stylesheet depending on the users platform
+func determineStylesheet(userAgent string) (string) {
+    userAgent = strings.ToLower(userAgent)
+    if(strings.Contains(userAgent, "android")) {
+        return "information-android-html.xsl"
+    }
+    return "information-html.xsl"
+}
+
 
 func processXSLT(xslFile string, xmlFile string) []byte {
 	cmd := exec.Cmd{
