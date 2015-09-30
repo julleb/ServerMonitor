@@ -31,7 +31,10 @@ function initCharts(historyDatapoints) {
             text: "Temperature History"
         },
         axisX: {
-            title: "Timestep",
+            title: "Date",
+            interval:2,
+            valueFormatString: "DD/MM hh:mm",
+            labelAngle: -20
         },
         axisY: {
             title: "Temperature [C]",
