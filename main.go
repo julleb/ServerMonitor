@@ -1,5 +1,8 @@
 package main
 
+
+//  xmllint --valid --noout file.xml
+
 import (
 	"bytes"
 	"encoding/xml"
@@ -144,6 +147,7 @@ func requestDataHandler(res http.ResponseWriter, req *http.Request) {
 
 		//the message from the server
 		messageFromInfoServer, error := getDataFromInfoServer(ip)
+        fmt.Println(messageFromInfoServer)
 		if error != nil {
             //couldnt connect to the ip
             message = createMessage("-1") //error code -1, if clients get -1 he should know that the server doesnt exist

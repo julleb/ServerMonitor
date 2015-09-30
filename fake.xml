@@ -1,18 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE information SYSTEM "information.dtd">
+<!DOCTYPE informations SYSTEM "information.dtd">
 <?xml-stylesheet type="text/xsl" href="xslt-fake.xsl"?>
 
 
-<information>
-    <CPU>
-        <temp unit="C&degree;">85</temp>
-        <temp unit="F&degree;">13</temp>
-    </CPU>
-    <Memory>
-        <total>4096</total>
-        <usage>1024</usage>
-    </Memory>
+<informations>
+    <information>
+        <Date>2015-09-30T16:28:32</Date>
+        <CPU>
+            <ServerData unit="C">
+                <Description>Temperature</Description>
+                <value>61</value>
+            </ServerData>
+            <ServerData unit="%">
+                <Description>Load</Description>
+                <value>99</value>
+            </ServerData>
+        </CPU>
+        <Memory>
+            <ServerData unit="M">
+                <Description>Total</Description>
+                <value>7839</value>
+            </ServerData>
+            <ServerData unit="M">
+                <Description>Used</Description>
+                <value>2576</value>
+            </ServerData>
+        </Memory>
+    </information>
 
-    
-       
-</information>
+</informations>

@@ -1,14 +1,13 @@
-<!ELEMENT informations (information) >
+<!ELEMENT informations (information*, Min*, Max*) >
 <!ELEMENT information (Date, CPU*, Memory*) >
 <!ELEMENT Date (#PCDATA) >
 <!ELEMENT CPU (ServerData*)>
 <!ELEMENT Memory (ServerData*)>
-<!ELEMENT ServerData (Description, value, Unit)>
-<!-- Attlist funkade inte -->
-<!-- <!ATTLIST ServerData unit CDATA #IMPLIED> -->
-
-<!ELEMENT Unit (#PCDATA) >
+<!ELEMENT ServerData (Description, value)>
+<!ATTLIST ServerData unit CDATA #IMPLIED>
 <!ELEMENT Description (#PCDATA)>
 <!ELEMENT value (#PCDATA)>
+<!ELEMENT Max (#PCDATA)>
+<!ELEMENT Min (#PCDATA)>
 
 <!ENTITY degree "&#176;">
