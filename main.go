@@ -36,7 +36,6 @@ func main() {
 	db.OpenDBConnection()
 
 	r := mux.NewRouter()
-	//r.HandleFunc("/public/", visualHandler)
 	r.HandleFunc("/", index)
 
 	r.HandleFunc("/requestdata/{ip}", requestDataHandler)

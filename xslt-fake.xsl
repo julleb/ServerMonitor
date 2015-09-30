@@ -25,7 +25,7 @@
             <div class="page-header">
               <h1>DM2517 ServerMonitor</h1>
             </div>
-            <h3>Live feed:</h3>
+            <h3 class="mainheader">Live feed:</h3>
             <div id="changingTable"> </div>
             <div id="horizontalContainer">
               <div id="chartContainerTemperature" style="height: 300px; width: 50%; float:left;"></div>
@@ -93,6 +93,11 @@
           serverSocket.onmessage = function(e) {
           // New XML data received!
           xml = e.data;
+        
+          if(xml === "-1") {
+                console.log("heeej guys");
+                $(".mainheader").append(" WARNING! Cannot connect to the ip...")
+          }
 
           // Remove old data from html
           $("#changingTable").empty();
