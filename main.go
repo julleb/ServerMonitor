@@ -182,24 +182,27 @@ func requestDataHandler(res http.ResponseWriter, req *http.Request) {
 		//the message from the server
 		messageFromInfoServer, error := getDataFromInfoServer(ip)
 		if error != nil {
-			//couldnt connect to the ip
+            //couldnt connect to the ip
+            message = createMessage("-1") //error code -1, if clients get -1 he should know that the server doesnt exist
+            err = conn.WriteMessage(messageType, message)
+		    if err != nil {
+			    fmt.Println(err)
+			    return
+		    }
 			return
 		}
-
+        //we got a connect to the InfoServer
+        
 		//we have to insert the ip if it doesnt exists. Since we are doing a while loop we
 		//dont want to query the db all the time, instead we use an variable for the checking
-
 		if ipExist == false {
 			if !ipExists(ip) { //the ip doesnt exist in db
 				insertIP(ip)
 			}
 			ipExist = true
 		}
-
+        //insert the data into the db
 		insertXMLtoDB(messageFromInfoServer, ip)
-
-		//we got a connect to the InfoServer
-		//TODO add the data to the server!
 
 		//send the message to the firefox client
 		message = createMessage(messageFromInfoServer)
