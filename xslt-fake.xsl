@@ -21,7 +21,6 @@
       <body>
 
         <div id="wrap">
-          <!-- Begin page content -->
           <div class="container">
             <div class="page-header">
               <h1>DM2517 ServerMonitor</h1>
@@ -29,28 +28,43 @@
             <h3>Live feed:</h3>
             <div id="changingTable"> </div>
             <div id="horizontalContainer">
-              <div id="chartContainerTemperature" style="height: 300px; width: 50%; float:left;"> </div>
-              <div id="chartContainerCPULoad" style="height: 300px; width: 50%;"> </div>
+              <div id="chartContainerTemperature" style="height: 300px; width: 50%; float:left;"></div>
+              <div id="chartContainerCPULoad" style="height: 300px; width: 50%;"></div>
             </div>
-            <div id="chartContainerUsedMemory" style="height: 300px; width: 100%;">
-            </div>
+            <div id="chartContainerUsedMemory" style="height: 300px; width: 100%;"></div>
+
 
             <script type="text/javascript">
               window.onload = function () {
-              initCharts();
+              // The chart with history needs some data...
+              data = [];
+              i = 0;
+              // We need {date,temperature} pairs which are in different parts in the xml
+              dates = [];
+              $("#historyTable").find("tr").find("td#date").each(function() {
+              dates.push(new Date($(this).text()));
+              });
+              $("#historyTable").find("tr").find("td#tempValue").each(function() {
+              data.push( {x:dates[i], y: Math.round($(this).text())} );
+              i++;
+              });
+              initCharts(data);
               }
             </script>
+
+            <div>
+
+              <div class="historyTable" style="float: left;display:none; visibility:hidden;">
+                <table id="historyTable" class="table table-condensed">
+                  <xsl:apply-templates select="information"/>
+                </table>
+              </div>
+              <div id="chartContainerTemperatureHistory" style="height: 300px; width: 70%;"> </div>
+            </div>
 
           </div>
         </div>
 
-        <h3>History of temperature</h3>
-
-        <div class="historyTable" style="float: left; width=50%;">
-          <table class="table table-condensed">
-            <xsl:apply-templates select="information"/>
-          </table>
-        </div>
 
         <script>
           var ip = window.location.href.split("/").pop();
@@ -101,22 +115,23 @@
 
   <xsl:template match="information">
     <tr>
+      <td id="date"> <xsl:value-of select="Date"></xsl:value-of> </td>
       <xsl:apply-templates select="CPU"/>
     </tr>
   </xsl:template>
 
   <xsl:template match="CPU">
-    <xsl:apply-templates select="ServerData"/>
+    <!-- We only care about history of temperature, right now. -->
+    <xsl:apply-templates select="ServerData[Description[text() = 'Temperature']]"/>
   </xsl:template>
 
-  <xsl:template match="ServerData">
-    <!-- We only care about history of temperature, right now. -->
-    <td> <xsl:value-of select="value[not(. > following-sibling::information/CPU/ServerData/value)]"></xsl:value-of> </td>
+  <xsl:template match="ServerData[Description[text() = 'Temperature']]">
+    <td id="tempValue"> <xsl:value-of select="value"></xsl:value-of> </td>
     <td> <xsl:value-of select="Unit"></xsl:value-of> </td>
     <td> <xsl:value-of select="Description"></xsl:value-of> </td>
 
   </xsl:template>
 
-   
+
 
 </xsl:stylesheet>

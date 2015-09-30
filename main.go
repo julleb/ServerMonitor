@@ -44,7 +44,6 @@ type Date struct {
 	Value   string   `xml:"Date"`
 }
 
-
 type information struct {
 	XMLName xml.Name `xml:"information"`
 	Date
@@ -52,20 +51,18 @@ type information struct {
 	Memory
 }
 type funfacts struct {
-    Attr string `xml:",attr"`
-    Min int `xml:"Min"`
-    Max int `xml:"Max"`
-    Avg float32 `xml:"Avg"`
-    Unit Unit 
+	Attr string  `xml:",attr"`
+	Min  int     `xml:"Min"`
+	Max  int     `xml:"Max"`
+	Avg  float32 `xml:"Avg"`
+	Unit Unit
 }
 
 type informations struct {
-	XMLName xml.Name `xml:"informations"`
-	Infos   []information
-    Funfacts funfacts
+	XMLName  xml.Name `xml:"informations"`
+	Infos    []information
+	Funfacts funfacts
 }
-
-
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024, //might need to increase this?
@@ -253,6 +250,21 @@ func insertXMLtoDB(xmldata string, ip string) {
 
 }
 
+//adds the average, min and max of cpu_temp to the struct holder from the db
+func getTresholdsForCPU(holder *informations, ip string) {
+	var values []interface{}
+	values = append(values, ip)
+	rows := db.Query("SELECT max(cpu_temp), min(cpu_temp), avg(cpu_temp) FROM server NATURAL JOIN has NATURAL JOIN information WHERE server.ip=$1", values)
+	var max, min int
+	var avg float32
+	for rows.Next() {
+		rows.Scan(&max, &min, &avg)
+		u := Unit{Value: "C&degree;"}
+		holder.Funfacts = funfacts{Attr: "temp", Min: min, Max: max, Avg: avg, Unit: u}
+
+	}
+}
+
 //query the db to get all data from a certain ip addrs
 func getInformationFromDB(ip string) string {
 	dateLength := 19 //a date is always 19 letters long
@@ -267,11 +279,14 @@ func getInformationFromDB(ip string) string {
 		rows.Scan(&info_id, &ip, &cpu_temp, &cpu_load, &memory_usage, &memory_total, &sqlDate)
 		//since our sqlDate has some trash in the end, we need to remove it
 		date := sqlDate.String()[:dateLength]
+		// Javascript wants a T between date and time: 2012-01-01T12:00:00
+		date = strings.Replace(date, " ", "T", 1)
 		holder = dataToXML(holder, info_id, ip, cpu_temp, cpu_load, memory_usage, memory_total, date)
 	}
-    
-    getTresholdsForCPU(&holder,ip)
-    
+
+	getTresholdsForCPU(&holder, ip)
+
+	db.DeferRows(rows)
 	//convert the holder to XML
 	output, err := xml.MarshalIndent(holder, "", "    ")
 	if err != nil {
@@ -296,28 +311,8 @@ func getInformationFromDB(ip string) string {
 <!ENTITY degree "&#176;">
 
 ]>
-
-
-
 `
-    fmt.Println(convertByteArrayToString(output))
-	return  header+convertByteArrayToString(output)
-}
-
-
-//adds the average, min and max of cpu_temp to the struct holder from the db
-func getTresholdsForCPU(holder *informations, ip string) {
-    var values []interface{}
-	values = append(values, ip)
-	rows := db.Query("SELECT max(cpu_temp), min(cpu_temp), avg(cpu_temp) FROM server NATURAL JOIN has NATURAL JOIN information WHERE server.ip=$1", values)
-    var max, min int
-    var avg float32
-	for rows.Next() {
-        rows.Scan(&max, &min, &avg)
-        u := Unit{Value: "C&degree;"}
-        holder.Funfacts = funfacts{Attr: "temp", Min: min, Max: max, Avg: avg, Unit: u}
-       
-    }
+	return header + convertByteArrayToString(output)
 }
 
 func dataToXML(holder informations, info_id int, ip string, cpu_temp int, cpu_load int, memory_usage int, memory_total int, sqlDate string) informations {
@@ -360,6 +355,7 @@ func insertInformation(ip string, values []interface{}) {
 	hasValues = append(hasValues, ip)
 	hasValues = append(hasValues, info_id)
 	rows = db.Query("INSERT INTO has(ip, info_id) VALUES($1,$2)", hasValues)
+	db.DeferRows(rows)
 }
 
 //addes the ip into the database
@@ -377,7 +373,9 @@ func ipExists(ip string) bool {
 	values = append(values, ip)
 	rows := db.Query("SELECT * FROM SERVER WHERE IP=$1", values)
 	for rows.Next() {
+		db.DeferRows(rows)
 		return true
 	}
+	db.DeferRows(rows)
 	return false
 }
