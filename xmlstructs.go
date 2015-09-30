@@ -1,10 +1,8 @@
 package main
 
 import (
-"encoding/xml"
-
+	"encoding/xml"
 )
-
 
 type Unit struct {
 	XMLName xml.Name `xml:"Unit"`
@@ -53,7 +51,7 @@ type informations struct {
 	Funfacts funfacts
 }
 
-const header =  `<?xml version="1.0" encoding="UTF-8"?>
+const header = `<?xml version="1.0" encoding="UTF-8"?>
 
 
 <!DOCTYPE informations [
@@ -75,10 +73,9 @@ const header =  `<?xml version="1.0" encoding="UTF-8"?>
 `
 
 //returns the xml header
-func getXMLHeader() (string) {
-    return header;
+func getXMLHeader() string {
+	return header
 }
-
 
 //creates and xml struct with the given parameters and returns the struct.
 //we can use this struct to generate and xml string
@@ -100,6 +97,3 @@ func dataToXML(holder informations, info_id int, ip string, cpu_temp int, cpu_lo
 	holder.Infos = append(holder.Infos, i)
 	return holder
 }
-
-
-

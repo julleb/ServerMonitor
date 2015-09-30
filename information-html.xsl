@@ -68,6 +68,7 @@
                     <th>Min</th>
                     <th>Max</th>
                     <th>Avg</th>
+                    <th>Unit</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -75,6 +76,7 @@
                     <td> <xsl:value-of select="Funfacts/Min"></xsl:value-of> </td>
                     <td> <xsl:value-of select="Funfacts/Max"></xsl:value-of> </td>
                     <td> <xsl:value-of select="Funfacts/Avg"></xsl:value-of> </td>
+                    <td> <xsl:value-of select="Funfacts/Unit"></xsl:value-of> </td>
                   </tr>
                 </tbody>
               </table>
