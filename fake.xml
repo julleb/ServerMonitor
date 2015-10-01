@@ -5,27 +5,36 @@
 
 <informations>
     <information>
-        <Date>2015-09-30T16:28:32</Date>
+        <Date>2015-10-01T09:06:34</Date>
         <CPU>
-            <ServerData unit="C">
+            <ServerData>
                 <Description>Temperature</Description>
-                <value>61</value>
+                <value>58</value>
+                <Unit>C&degree;</Unit>
             </ServerData>
-            <ServerData unit="%">
+            <ServerData>
                 <Description>Load</Description>
                 <value>99</value>
+                <Unit>%</Unit>
             </ServerData>
         </CPU>
         <Memory>
-            <ServerData unit="M">
+            <ServerData>
                 <Description>Total</Description>
-                <value>7839</value>
+                <value>2519</value>
+                <Unit>MB</Unit>
             </ServerData>
-            <ServerData unit="M">
+            <ServerData>
                 <Description>Used</Description>
-                <value>2576</value>
+                <value>7839</value>
+                <Unit>MB</Unit>
             </ServerData>
         </Memory>
     </information>
-
+    <Funfacts Attr="temp">
+        <Min>58</Min>
+        <Max>58</Max>
+        <Avg>58</Avg>
+        <Unit>C&degree;</Unit>
+    </Funfacts>
 </informations>

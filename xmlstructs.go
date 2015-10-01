@@ -52,6 +52,11 @@ type informations struct {
 }
 
 const header = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE informations SYSTEM "information.dtd">`
+
+
+
+/*`<?xml version="1.0" encoding="UTF-8"?>
 
 
 <!DOCTYPE informations [
@@ -70,7 +75,7 @@ const header = `<?xml version="1.0" encoding="UTF-8"?>
 <!ENTITY degree "&#176;">
 
 ]>
-`
+`*/
 
 //returns the xml header
 func getXMLHeader() string {

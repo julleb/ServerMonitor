@@ -1,13 +1,18 @@
-<!ELEMENT informations (information*, Min*, Max*) >
+<!ELEMENT informations (information*, Funfacts*) >
 <!ELEMENT information (Date, CPU*, Memory*) >
 <!ELEMENT Date (#PCDATA) >
 <!ELEMENT CPU (ServerData*)>
 <!ELEMENT Memory (ServerData*)>
-<!ELEMENT ServerData (Description, value)>
-<!ATTLIST ServerData unit CDATA #IMPLIED>
+<!ELEMENT ServerData (Description, value, Unit)>
 <!ELEMENT Description (#PCDATA)>
 <!ELEMENT value (#PCDATA)>
+
+
+<!ELEMENT Funfacts (Min, Max, Avg, Unit) >
 <!ELEMENT Max (#PCDATA)>
 <!ELEMENT Min (#PCDATA)>
+<!ELEMENT Avg (#PCDATA)>
+<!ELEMENT Unit (#PCDATA)>
+<!ATTLIST Funfacts Attr CDATA #IMPLIED>
 
 <!ENTITY degree "&#176;">

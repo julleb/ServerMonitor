@@ -83,6 +83,12 @@ func serverMonitorHandler(res http.ResponseWriter, req *http.Request) {
 	xmlString := getInformationFromDB(ip) //returns the old data as xml
 	//here we can get the ip and query the db
 
+    //fmt.Println(dtdValid(xmlString))
+    if(!dtdValid(xmlString)) {
+        //xml is not valid - but dont what we should do then ??
+        fmt.Println("ERROR: xml is not valid...")
+    }
+
     xslFile := determineStylesheet(req.UserAgent())
 
 	htmlCode := processXSLTstdin(xslFile, xmlString) //"xslt-fake.xsl"
@@ -100,6 +106,24 @@ func determineStylesheet(userAgent string) (string) {
     return "information-html.xsl"
 }
 
+
+//check if the xml is valid to the dtd
+func dtdValid(xml string) (bool) {
+    b := bytes.NewBufferString(xml)
+    cmd := exec.Cmd{
+        Args: []string{"xmllint", "--valid", "--noout", "-"}, //"-"
+        Env: os.Environ(),
+        Path: "/usr/bin/xmllint",
+        Stdin: b,
+    }
+    _,err:= cmd.Output()
+    if err != nil {
+        //its invalid
+        return false    
+    }
+    return true
+    //xmllint --valid --noout fake.xml
+}
 
 func processXSLT(xslFile string, xmlFile string) []byte {
 	cmd := exec.Cmd{
@@ -263,7 +287,7 @@ func getInformationFromDB(ip string) string {
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
 	}
-
+    //getXMLHeader() + convertByteArrayToString(output)
 	return getXMLHeader() + convertByteArrayToString(output)
 }
 
