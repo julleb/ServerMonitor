@@ -1,18 +1,4 @@
-
-
-/*$ sudo su postgres -c psql*/
-/*jullebulle pw*/
-/* \l - show dbs */
-/* \dt schemes */
-
 /*change to random db before we drop it*/
-
-/* \i /home/jb/go/src/github.com/julleb/ServerMonitor/database.sql */
-/*select * from server NATURAL JOIN information ON id =  */
-
-
-/*serial primary key --> increment the primary key in each insert*/
-
 \c julle; 
 drop database servermonitor;
 create database servermonitor;
