@@ -36,7 +36,7 @@ var templates = template.Must(template.ParseGlob("views/*"))
 
 func main() {
 
-	db.OpenDBConnection()
+	db.OpenDBConnection("servermonitor")
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", index)

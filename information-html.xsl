@@ -125,6 +125,14 @@
                 // console.log(descr + " " + value + " " + unit);
                 updateChart(descr, value);
               });
+
+              // Add the uptime info
+              $(xml).find("Uptime").each(function () {
+                console.log("hello its me");
+                value = $(this).text();
+                var table = $("#changingTable").children();
+                table.append("<tr><td>" + "Uptime" + "</td><td>" + value + "</td><td> " + "" + " </td></tr>");
+              });
             };
           }, 5000);
         </script>
