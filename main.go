@@ -1,6 +1,5 @@
 package main
 
-
 //  xmllint --valid --noout file.xml
 
 import (
@@ -19,7 +18,6 @@ import (
 	"strings"
 	"time"
 )
-
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024, //might need to increase this?
@@ -83,13 +81,13 @@ func serverMonitorHandler(res http.ResponseWriter, req *http.Request) {
 	xmlString := getInformationFromDB(ip) //returns the old data as xml
 	//here we can get the ip and query the db
 
-    //fmt.Println(dtdValid(xmlString))
-    if(!dtdValid(xmlString)) {
-        //xml is not valid - but dont what we should do then ??
-        fmt.Println("ERROR: xml is not valid...")
-    }
+	//fmt.Println(dtdValid(xmlString))
+	if !dtdValid(xmlString) {
+		//xml is not valid - but dont what we should do then ??
+		fmt.Println("ERROR: xml is not valid...")
+	}
 
-    xslFile := determineStylesheet(req.UserAgent())
+	xslFile := determineStylesheet(req.UserAgent())
 
 	htmlCode := processXSLTstdin(xslFile, xmlString) //"xslt-fake.xsl"
 	io.WriteString(res, string(htmlCode))
@@ -98,31 +96,30 @@ func serverMonitorHandler(res http.ResponseWriter, req *http.Request) {
 
 //determine which stylesheet to use, depending on the users UserAgent
 //in this way, we can use different stylesheet depending on the users platform
-func determineStylesheet(userAgent string) (string) {
-    userAgent = strings.ToLower(userAgent)
-    if(strings.Contains(userAgent, "android")) {
-        return "information-android-html.xsl"
-    }
-    return "information-html.xsl"
+func determineStylesheet(userAgent string) string {
+	userAgent = strings.ToLower(userAgent)
+	if strings.Contains(userAgent, "android") {
+		return "information-android-html.xsl"
+	}
+	return "information-html.xsl"
 }
 
-
 //check if the xml is valid to the dtd
-func dtdValid(xml string) (bool) {
-    b := bytes.NewBufferString(xml)
-    cmd := exec.Cmd{
-        Args: []string{"xmllint", "--valid", "--noout", "-"}, //"-"
-        Env: os.Environ(),
-        Path: "/usr/bin/xmllint",
-        Stdin: b,
-    }
-    _,err:= cmd.Output()
-    if err != nil {
-        //its invalid
-        return false    
-    }
-    return true
-    //xmllint --valid --noout fake.xml
+func dtdValid(xml string) bool {
+	b := bytes.NewBufferString(xml)
+	cmd := exec.Cmd{
+		Args:  []string{"xmllint", "--valid", "--noout", "-"}, //"-"
+		Env:   os.Environ(),
+		Path:  "/usr/bin/xmllint",
+		Stdin: b,
+	}
+	_, err := cmd.Output()
+	if err != nil {
+		//its invalid
+		return false
+	}
+	return true
+	//xmllint --valid --noout fake.xml
 }
 
 func processXSLT(xslFile string, xmlFile string) []byte {
@@ -171,19 +168,19 @@ func requestDataHandler(res http.ResponseWriter, req *http.Request) {
 
 		//the message from the server
 		messageFromInfoServer, error := getDataFromInfoServer(ip)
-        fmt.Println(messageFromInfoServer)
+		fmt.Println(messageFromInfoServer)
 		if error != nil {
-            //couldnt connect to the ip
-            message = createMessage("-1") //error code -1, if clients get -1 he should know that the server doesnt exist
-            err = conn.WriteMessage(messageType, message)
-		    if err != nil {
-			    fmt.Println(err)
-			    return
-		    }
+			//couldnt connect to the ip
+			message = createMessage("-1") //error code -1, if clients get -1 he should know that the server doesnt exist
+			err = conn.WriteMessage(messageType, message)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 			return
 		}
-        //we got a connect to the InfoServer
-        
+		//we got a connect to the InfoServer
+
 		//we have to insert the ip if it doesnt exists. Since we are doing a while loop we
 		//dont want to query the db all the time, instead we use an variable for the checking
 		if ipExist == false {
@@ -192,7 +189,7 @@ func requestDataHandler(res http.ResponseWriter, req *http.Request) {
 			}
 			ipExist = true
 		}
-        //insert the data into the db
+		//insert the data into the db
 		insertXMLtoDB(messageFromInfoServer, ip)
 
 		//send the message to the firefox client
@@ -287,10 +284,9 @@ func getInformationFromDB(ip string) string {
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
 	}
-    //getXMLHeader() + convertByteArrayToString(output)
+	//getXMLHeader() + convertByteArrayToString(output)
 	return getXMLHeader() + convertByteArrayToString(output)
 }
-
 
 //gets the data from the xml and puts it in the values array
 func getDataFromXML(serverdata []serverData, values []interface{}) []interface{} {

@@ -54,8 +54,6 @@ type informations struct {
 const header = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE informations SYSTEM "information.dtd">`
 
-
-
 /*`<?xml version="1.0" encoding="UTF-8"?>
 
 
